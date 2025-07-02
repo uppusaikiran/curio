@@ -1,0 +1,223 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Setup Project Repository",
+        "description": "Initialize GitHub repository and configure Vercel for CI/CD deployment.",
+        "details": "Create a new GitHub repository for the project. Set up Vercel integration for both frontend (Next.js) and backend (Node.js/Fastify) deployment. Configure GitHub Actions or Vercel hooks for automatic deployment on push to main branch.",
+        "testStrategy": "Verify repository creation, Vercel project setup, and successful deployment of a basic 'Hello World' page.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Frontend Project Scaffolding",
+        "description": "Set up Next.js project with TypeScript and Tailwind CSS.",
+        "details": "Initialize a Next.js project with TypeScript and Tailwind CSS. Configure basic routing and layout. Install required dependencies (zustand/react-context, react-media-recorder).",
+        "testStrategy": "Run development server, verify basic page loads, and check for TypeScript/Tailwind integration.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Backend Project Scaffolding",
+        "description": "Set up Node.js backend with Fastify and TypeScript.",
+        "details": "Initialize a Node.js project with Fastify and TypeScript. Configure basic routing and middleware. Prepare for API endpoint development.",
+        "testStrategy": "Start backend server, verify basic endpoint responds, and check TypeScript compilation.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Static Frontend UI",
+        "description": "Build static UI for landing page and main interaction flow.",
+        "details": "Implement landing page with video avatar greeting. Add main interaction button for voice recording. Use Zustand or React Context for state management.",
+        "testStrategy": "Manual UI review, check for intuitive layout and correct state management.",
+        "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Audio Recording Integration",
+        "description": "Integrate react-media-recorder for voice input.",
+        "details": "Add react-media-recorder to capture user voice input. Implement start/stop recording button. Store audio blob in state.",
+        "testStrategy": "Test recording functionality across browsers, verify audio blob is captured.",
+        "priority": "medium",
+        "dependencies": [
+          2,
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Backend API Endpoint Setup",
+        "description": "Create primary conversation endpoint.",
+        "details": "Implement `/api/conversation` endpoint in Fastify. Prepare for orchestration of API integrations.",
+        "testStrategy": "Test endpoint with mock payload, verify response structure.",
+        "priority": "medium",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Speech-to-Text Integration",
+        "description": "Integrate OpenAI Whisper API for speech-to-text.",
+        "details": "Add OpenAI Whisper API call to backend. Pass audio blob from frontend, receive transcribed text.",
+        "testStrategy": "Test with sample audio, verify accurate transcription.",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "LLM Script Generation",
+        "description": "Integrate OpenAI GPT-4o for script generation.",
+        "details": "Call OpenAI GPT-4o with transcribed text and user context. Generate personalized recommendation script.",
+        "testStrategy": "Test with sample queries, verify script quality and relevance.",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          6,
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Cultural Data Integration",
+        "description": "Integrate Qloo API for cultural recommendations.",
+        "details": "Call Qloo API with user interests from LLM output. Fetch relevant cultural data.",
+        "testStrategy": "Test with mock interests, verify data returned matches expectations.",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          6,
+          8
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Voice Synthesis Integration",
+        "description": "Integrate ElevenLabs API for voice synthesis.",
+        "details": "Call ElevenLabs API with generated script. Receive high-quality audio output.",
+        "testStrategy": "Test with sample scripts, verify audio quality and expressiveness.",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          6,
+          8
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 11,
+        "title": "Video Synthesis Integration",
+        "description": "Integrate Tavus API for video synthesis.",
+        "details": "Call Tavus API with pre-generated ElevenLabs audio. Generate video with lip-sync.",
+        "testStrategy": "Test with sample audio, verify video quality and lip-sync accuracy.",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          6,
+          10
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 12,
+        "title": "End-to-End Pipeline Connection",
+        "description": "Connect all APIs in backend orchestrator.",
+        "details": "Orchestrate flow: audio -> speech-to-text -> LLM -> Qloo -> voice synthesis -> video synthesis. Return video URL to frontend.",
+        "testStrategy": "Test full user flow, verify video response is generated and returned.",
+        "priority": "high",
+        "dependencies": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 13,
+        "title": "UI/UX Refinement",
+        "description": "Refine UI/UX for delightful experience.",
+        "details": "Add loading states, error handling, and feedback. Optimize for intuitive use (3 clicks or less).",
+        "testStrategy": "User testing, verify intuitive flow and error handling.",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          12
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 14,
+        "title": "Performance & Latency Optimization",
+        "description": "Optimize pipeline latency and frontend performance.",
+        "details": "Profile and optimize backend API calls. Ensure P95 latency < 15s. Achieve Lighthouse score > 90.",
+        "testStrategy": "Measure end-to-end latency, run Lighthouse audits.",
+        "priority": "medium",
+        "dependencies": [
+          12,
+          13
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 15,
+        "title": "Demo Preparation & Bug Fixing",
+        "description": "Prepare for demo and fix critical bugs.",
+        "details": "Feature freeze, bug squashing, record demo video, prepare presentation materials.",
+        "testStrategy": "End-to-end testing, user feedback collection, demo rehearsal.",
+        "priority": "medium",
+        "dependencies": [
+          13,
+          14
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-07-02T15:04:24.145Z",
+      "updated": "2025-07-02T15:04:24.145Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
