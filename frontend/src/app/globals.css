@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #111111;
+  
+  /* Qloo brand colors */
+  --qloo-yellow: #ffd400;
+  --qloo-teal: #00ffe9;
+  --qloo-black: #111111;
+  
+  /* UI colors */
+  --primary: var(--qloo-yellow);
+  --primary-foreground: #111111;
+  --secondary: var(--qloo-teal);
+  --secondary-foreground: #111111;
+  --muted: #f3f3f3;
+  --muted-foreground: #666666;
+  --accent: var(--qloo-teal);
+  --accent-foreground: #111111;
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: var(--qloo-yellow);
+  --radius: 0.5rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --muted: #222222;
+  --muted-foreground: #a0a0a0;
+  --border: #333333;
+  --input: #333333;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, var(--qloo-yellow) 0%, var(--qloo-teal) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
