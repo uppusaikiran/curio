@@ -24,8 +24,10 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.59.0",
+    "react-markdown": "^10.1.0",
     "react-media-recorder": "^1.7.1",
     "react-select": "^5.10.1",
+    "remark-gfm": "^4.0.1",
     "sonner": "^2.0.5",
     "tailwind-merge": "^3.3.1",
     "zod": "^3.25.67",
@@ -34,6 +36,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@tailwindcss/typography": "^0.5.16",
     "@types/d3": "^7.4.3",
     "@types/node": "^20",
     "@types/react": "^19",

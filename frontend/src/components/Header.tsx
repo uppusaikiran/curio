@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Container } from './ui/container';
 import { Button } from './ui/button';
-import { Menu, X, Moon, Sun, Settings, LogOut, User, Globe, Music, Film, Book } from 'lucide-react';
+import { Menu, X, Moon, Sun, Settings, LogOut, User, Globe, Music, Film, Book, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { useTheme } from '@/providers/ThemeProvider';
@@ -35,6 +35,12 @@ export default function Header() {
     { name: 'Home', path: '/' },
     { name: 'Discover', path: '/discover' },
     { name: 'Insights Dashboard', path: '/insights-dashboard' },
+    { 
+      name: 'Cultural Assistant', 
+      path: '/cultural-assistant',
+      icon: <Sparkles className="h-4 w-4 text-qloo-yellow" />,
+      isNew: true
+    },
     { name: 'About', path: '/about' },
   ];
 
@@ -72,7 +78,9 @@ export default function Header() {
                     : ''
                 }`}
               >
+                {item.icon && <span className="mr-1">{item.icon}</span>}
                 {item.name}
+                {item.isNew && <span className="ml-1 bg-qloo-yellow text-qloo-black text-xs px-1 py-0.5 rounded-full text-[10px]">NEW</span>}
               </Link>
             ))}
             {isAdmin && adminNavItems.map((item) => (
@@ -162,7 +170,9 @@ export default function Header() {
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
+                  {item.icon && item.icon}
                   {item.name}
+                  {item.isNew && <span className="ml-1 bg-qloo-yellow text-qloo-black text-xs px-1 py-0.5 rounded-full text-[10px]">NEW</span>}
                 </Link>
               ))}
               {isAdmin && adminNavItems.map((item) => (

@@ -12,6 +12,43 @@ const perplexityApi = axios.create({
 });
 
 /**
+ * Get a response from Perplexity based on a prompt and context
+ * @param prompt The user's prompt/question
+ * @param context Additional context to inform the response
+ * @returns Perplexity's response text
+ */
+export async function getPerplexityResponse(prompt: string, context: string) {
+  try {
+    const response = await perplexityApi.post('/chat/completions', {
+      model: "sonar",
+      messages: [
+        {
+          role: "system",
+          content: `You are a cultural insights specialist who understands the connections between different domains of taste. 
+          You provide thoughtful analysis of cultural preferences and can make connections between different entities.
+          Format your responses using Markdown for better readability. Use headings, bullet points, and other formatting to organize your insights.
+          When mentioning entities, concepts, or references, always include properly formatted Markdown links to relevant sources or additional information.
+          For example, use [Entity Name](https://relevant-url.com) format for links.
+          Include references at the end of your response when appropriate.
+          ${context}`
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.2,
+      max_tokens: 1000
+    });
+    
+    return response.data.choices[0].message.content;
+  } catch (error) {
+    console.error('Error getting response from Perplexity:', error);
+    throw error;
+  }
+}
+
+/**
  * Get cultural context insights about an entity using Perplexity API
  * @param entityType The type of entity (movie, music, etc.)
  * @param entityName The name of the entity
@@ -20,7 +57,7 @@ const perplexityApi = axios.create({
 export async function getCulturalContext(entityType: string, entityName: string) {
   try {
     const response = await perplexityApi.post('/chat/completions', {
-      model: "sonar-small-online",
+      model: "sonar",
       messages: [
         {
           role: "system",
@@ -69,7 +106,7 @@ export async function getCulturalContext(entityType: string, entityName: string)
 export async function getCrossDomainRecommendations(entityType: string, entityName: string, targetDomain: string) {
   try {
     const response = await perplexityApi.post('/chat/completions', {
-      model: "sonar-small-online",
+      model: "sonar",
       messages: [
         {
           role: "system",
@@ -107,7 +144,7 @@ export async function getCrossDomainRecommendations(entityType: string, entityNa
 export async function analyzeCulturalTrend(trend: string) {
   try {
     const response = await perplexityApi.post('/chat/completions', {
-      model: "sonar-small-online",
+      model: "sonar",
       messages: [
         {
           role: "system",
@@ -147,6 +184,7 @@ export async function analyzeCulturalTrend(trend: string) {
 }
 
 export default {
+  getPerplexityResponse,
   getCulturalContext,
   getCrossDomainRecommendations,
   analyzeCulturalTrend
