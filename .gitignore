@@ -42,5 +42,8 @@ node_modules/
 .taskmaster/config.local.json
 
 # Task files (uncomment if you don't want to version control tasks)
+# tasks/ .env.local
+
+# Task files
 # tasks.json
 # tasks/ 

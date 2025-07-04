@@ -7,12 +7,15 @@ import { Menu, X, Moon, Sun, Settings, LogOut, User, Globe, Music, Film, Book } 
 import Link from 'next/link';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { useTheme } from '@/providers/ThemeProvider';
+import { usePathname } from 'next/navigation';
+import Avatar from './Avatar';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, isAuthenticated, signOut } = useAuthContext();
   const { theme, toggleTheme } = useTheme();
   const isDarkMode = theme === 'dark';
+  const pathname = usePathname();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -26,6 +29,21 @@ export default function Header() {
       console.error('Sign out error:', error);
     }
   };
+
+  // Navigation items with active state detection
+  const navItems = [
+    { name: 'Home', path: '/' },
+    { name: 'Discover', path: '/discover' },
+    { name: 'Insights Dashboard', path: '/insights-dashboard' },
+    { name: 'About', path: '/about' },
+  ];
+
+  const adminNavItems = [
+    { name: 'Debug', path: '/debug' },
+    // Add other admin-only links here
+  ];
+  
+  const isAdmin = user && (user.user_metadata as any)?.role === 'admin';
 
   return (
     <header className="py-4 border-b border-border/40 bg-background/80 backdrop-blur-sm sticky top-0 z-50">
@@ -44,22 +62,32 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            <Link href="/" className="text-foreground hover:text-qloo-yellow transition-colors flex items-center gap-1">
-              <Globe className="h-4 w-4" />
-              <span>Discover</span>
-            </Link>
-            <Link href="/about" className="text-muted-foreground hover:text-qloo-teal transition-colors flex items-center gap-1">
-              <Music className="h-4 w-4" />
-              <span>Music</span>
-            </Link>
-            <Link href="/about" className="text-muted-foreground hover:text-qloo-teal transition-colors flex items-center gap-1">
-              <Film className="h-4 w-4" />
-              <span>Movies</span>
-            </Link>
-            <Link href="/about" className="text-muted-foreground hover:text-qloo-teal transition-colors flex items-center gap-1">
-              <Book className="h-4 w-4" />
-              <span>Books</span>
-            </Link>
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                href={item.path}
+                className={`text-foreground hover:text-qloo-yellow transition-colors flex items-center gap-1 ${
+                  pathname === item.path
+                    ? 'border-b-2 border-qloo-yellow'
+                    : ''
+                }`}
+              >
+                {item.name}
+              </Link>
+            ))}
+            {isAdmin && adminNavItems.map((item) => (
+              <Link
+                key={item.path}
+                href={item.path}
+                className={`text-foreground hover:text-qloo-yellow transition-colors flex items-center gap-1 ${
+                  pathname === item.path
+                    ? 'border-b-2 border-qloo-yellow'
+                    : ''
+                }`}
+              >
+                {item.name}
+              </Link>
+            ))}
             <Link href="/settings" className="text-muted-foreground hover:text-foreground transition-colors">
               <Settings className="h-4 w-4" />
             </Link>
@@ -123,38 +151,34 @@ export default function Header() {
         {isMenuOpen && (
           <div className="md:hidden pt-4 pb-2 border-t mt-4">
             <nav className="flex flex-col gap-4">
-              <Link 
-                href="/" 
-                className="text-foreground hover:text-qloo-yellow transition-colors flex items-center gap-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <Globe className="h-5 w-5" />
-                <span>Discover</span>
-              </Link>
-              <Link 
-                href="/about" 
-                className="text-muted-foreground hover:text-qloo-teal transition-colors flex items-center gap-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <Music className="h-5 w-5" />
-                <span>Music</span>
-              </Link>
-              <Link 
-                href="/about" 
-                className="text-muted-foreground hover:text-qloo-teal transition-colors flex items-center gap-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <Film className="h-5 w-5" />
-                <span>Movies</span>
-              </Link>
-              <Link 
-                href="/about" 
-                className="text-muted-foreground hover:text-qloo-teal transition-colors flex items-center gap-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <Book className="h-5 w-5" />
-                <span>Books</span>
-              </Link>
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  className={`text-foreground hover:text-qloo-yellow transition-colors flex items-center gap-2 ${
+                    pathname === item.path
+                      ? 'border-b-2 border-qloo-yellow'
+                      : ''
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              ))}
+              {isAdmin && adminNavItems.map((item) => (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  className={`text-foreground hover:text-qloo-yellow transition-colors flex items-center gap-2 ${
+                    pathname === item.path
+                      ? 'border-b-2 border-qloo-yellow'
+                      : ''
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              ))}
               <Link 
                 href="/settings" 
                 className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
