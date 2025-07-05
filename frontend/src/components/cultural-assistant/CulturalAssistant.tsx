@@ -13,6 +13,9 @@ import { Badge } from '@/components/ui/badge';
 import * as d3 from 'd3';
 import WordCloudVisualization from './WordCloudVisualization';
 import GeoVisualization from './GeoVisualization';
+import AudienceDemographics from './AudienceDemographics';
+import CrossCategoryAffinity from './CrossCategoryAffinity';
+import TrendAnalysisChart from './TrendAnalysisChart';
 
 type AssistantState = {
   loading: boolean;
@@ -1253,6 +1256,39 @@ export default function CulturalAssistant() {
                     </p>
                     <div className="h-[150px] border border-border/30 rounded-lg p-2">
                       <svg ref={timelineRef} width="100%" height="100%"></svg>
+                    </div>
+                  </div>
+                  
+                  {/* Audience Demographics */}
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Audience Demographics</h3>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Demographic breakdown of audiences for selected entities
+                    </p>
+                    <div className="h-[400px] border border-border/30 rounded-lg p-2">
+                      <AudienceDemographics entities={selectedEntities} />
+                    </div>
+                  </div>
+                  
+                  {/* Cross-Category Affinity */}
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Cross-Category Cultural Affinities</h3>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      How these entities relate to other cultural categories (powered by Qloo's cross-domain intelligence)
+                    </p>
+                    <div className="h-[500px] border border-border/30 rounded-lg p-2">
+                      <CrossCategoryAffinity entities={selectedEntities} />
+                    </div>
+                  </div>
+                  
+                  {/* Trend Analysis Chart */}
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Cultural Trend Analysis</h3>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Historical trends and cultural relevance over time
+                    </p>
+                    <div className="h-[400px] border border-border/30 rounded-lg p-2">
+                      <TrendAnalysisChart entities={selectedEntities} />
                     </div>
                   </div>
                   
