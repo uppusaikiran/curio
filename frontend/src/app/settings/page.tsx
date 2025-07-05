@@ -8,7 +8,7 @@ import { useAppStore } from '@/lib/store';
 import { Trash2, Save, Volume2, Mic, Clock } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { clearHistory } = useAppStore();
+  const { clearConversation } = useAppStore();
   const [voicePreference, setVoicePreference] = useState('female');
   const [saveSuccess, setSaveSuccess] = useState(false);
   
@@ -20,7 +20,7 @@ export default function SettingsPage() {
   
   const handleClearHistory = () => {
     if (confirm('Are you sure you want to clear your conversation history? This cannot be undone.')) {
-      clearHistory();
+      clearConversation();
     }
   };
 
