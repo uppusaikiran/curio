@@ -51,6 +51,8 @@ type SentimentData = {
 export default function CulturalAssistant() {
   const [selectedEntities, setSelectedEntities] = useState<QlooEntity[]>([]);
   const [userQuestion, setUserQuestion] = useState('');
+  const [selectedQueryId, setSelectedQueryId] = useState<string | null>(null);
+  const [isQuestionsExpanded, setIsQuestionsExpanded] = useState(false);
   const [assistantState, setAssistantState] = useState<AssistantState>({
     loading: false,
     error: null,
@@ -79,6 +81,59 @@ export default function CulturalAssistant() {
   const sentimentChartRef = useRef<SVGSVGElement>(null);
   const connectionGraphRef = useRef<SVGSVGElement>(null);
   const timelineRef = useRef<SVGSVGElement>(null);
+  
+  // Precomputed queries organized by categories
+  const precomputedQueryCategories = [
+    {
+      name: "Connections",
+      queries: [
+        "What connects these interests culturally?",
+        "What cultural patterns can you identify from these selections?",
+        "How are these interests related to each other?"
+      ]
+    },
+    {
+      name: "Recommendations",
+      queries: [
+        "What other movies would I enjoy based on these?",
+        "What music artists align with these interests?",
+        "What books would complement these tastes?"
+      ]
+    },
+    {
+      name: "Trends & Analysis",
+      queries: [
+        "How do these interests reflect current cultural trends?",
+        "What emerging artists/creators align with these tastes?",
+        "How have these cultural elements evolved over time?"
+      ]
+    },
+    {
+      name: "Geographic & Demographics",
+      queries: [
+        "How do these interests relate across different regions?",
+        "What demographics are most associated with these interests?",
+        "How do cultural contexts differ for these interests globally?"
+      ]
+    }
+  ];
+
+  // Active category for precomputed queries (null means show all)
+  const [activeQueryCategory, setActiveQueryCategory] = useState<string | null>(null);
+
+  // Handle selecting a precomputed query
+  const handleSelectQuery = (query: string, categoryName: string, index: number) => {
+    setUserQuestion(query);
+    setSelectedQueryId(`${categoryName}-${index}`);
+  };
+  
+  // Clear the selected query when user edits the textarea manually
+  const handleQuestionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setUserQuestion(e.target.value);
+    if (selectedQueryId) {
+      setSelectedQueryId(null);
+    }
+  };
   
   // Load entity types on mount
   useEffect(() => {
@@ -823,6 +878,17 @@ export default function CulturalAssistant() {
       .text(d => d.year);
   };
 
+  // Clear the question field
+  const clearQuestion = () => {
+    setUserQuestion('');
+    setSelectedQueryId(null);
+  };
+
+  // Toggle questions section
+  const toggleQuestionsSection = () => {
+    setIsQuestionsExpanded(!isQuestionsExpanded);
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
       {/* Left column: Entity selection */}
@@ -937,15 +1003,124 @@ export default function CulturalAssistant() {
                 insights using Qloo's cultural intelligence combined with advanced language models.
               </p>
               
+              {/* Precomputed queries section */}
+              <div className="mb-6">
+                <button 
+                  onClick={toggleQuestionsSection}
+                  className="flex items-center justify-between w-full text-left mb-2 group"
+                  type="button"
+                >
+                  <h3 className="text-sm font-medium flex items-center">
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="16" 
+                      height="16" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      className={`mr-1 transition-transform ${isQuestionsExpanded ? 'rotate-90' : ''}`}
+                    >
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                    Quick Questions
+                  </h3>
+                  <span className="text-xs text-muted-foreground group-hover:text-foreground">
+                    {isQuestionsExpanded ? 'Hide suggestions' : 'Show suggestions'}
+                  </span>
+                </button>
+                
+                {isQuestionsExpanded && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="pt-2 pb-1 flex items-center justify-between mb-2">
+                      <div className="flex gap-1 text-xs">
+                        <button 
+                          className={`px-2 py-0.5 rounded-md transition-colors ${activeQueryCategory === null ? 'bg-qloo-teal/20 text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                          onClick={() => setActiveQueryCategory(null)}
+                        >
+                          All
+                        </button>
+                        {precomputedQueryCategories.map(category => (
+                          <button
+                            key={category.name}
+                            className={`px-2 py-0.5 rounded-md transition-colors ${activeQueryCategory === category.name ? 'bg-qloo-teal/20 text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                            onClick={() => setActiveQueryCategory(category.name)}
+                          >
+                            {category.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {(activeQueryCategory === null 
+                        ? precomputedQueryCategories 
+                        : precomputedQueryCategories.filter(c => c.name === activeQueryCategory)
+                      ).map(category => (
+                        <div key={category.name} className="space-y-2">
+                          {activeQueryCategory === null && (
+                            <h4 className="text-xs font-medium text-muted-foreground">{category.name}</h4>
+                          )}
+                          <div className="flex flex-wrap gap-2">
+                            {category.queries.map((query, index) => {
+                              const queryId = `${category.name}-${index}`;
+                              const isSelected = queryId === selectedQueryId;
+                              
+                              return (
+                                <button
+                                  key={index}
+                                  onClick={() => handleSelectQuery(query, category.name, index)}
+                                  className={`text-xs py-1.5 px-3 ${isSelected ? 'bg-qloo-teal/40 border-qloo-teal' : 'bg-qloo-teal/10 hover:bg-qloo-teal/30'} text-foreground rounded-md transition-colors flex items-center ${isSelected ? 'border' : ''}`}
+                                  type="button"
+                                  title={query.length > 25 ? query : undefined}
+                                >
+                                  {isSelected && (
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                                      <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                  )}
+                                  {query.length > 25 ? `${query.substring(0, 25)}...` : query}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+              
               <form onSubmit={handleSubmit}>
-                <div className="mb-4">
+                <div className="mb-4 relative">
                   <textarea
                     value={userQuestion}
-                    onChange={(e) => setUserQuestion(e.target.value)}
+                    onChange={handleQuestionChange}
                     placeholder="What connects these interests? What else might I enjoy? What cultural patterns do you see?"
-                    className="w-full p-3 rounded-md border border-input bg-background"
+                    className="w-full p-3 rounded-md border border-input bg-background pr-10"
                     rows={3}
                   />
+                  {userQuestion && (
+                    <button
+                      type="button"
+                      onClick={clearQuestion}
+                      className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                      title="Clear question"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  )}
                 </div>
                 <button 
                   type="submit"

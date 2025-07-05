@@ -97,8 +97,8 @@ export default function GeoVisualization({ entities }: GeoVisualizationProps) {
     
     // Create color scale for influence
     const colorScale = d3.scaleLinear<string>()
-      .domain([0, 1])
-      .range(["#e0f2f1", "var(--qloo-teal)"]);
+      .domain([0, 0.25, 0.5, 0.75, 1])
+      .range(["#e0f2f1", "#80cbc4", "#26a69a", "#00897b", "var(--qloo-teal)"]);
     
     // Draw regions
     regions.forEach(region => {
@@ -131,14 +131,30 @@ export default function GeoVisualization({ entities }: GeoVisualizationProps) {
         .duration(500)
         .style("opacity", 1);
       
-      // Add influence score
+      // Add influence score with colored background for better visibility
       if (influence > 0.1) {
+        // Add background pill for the percentage
+        g.append("rect")
+          .attr("x", centroid.x - 25)
+          .attr("y", centroid.y + 5)
+          .attr("width", 50)
+          .attr("height", 16)
+          .attr("rx", 8)
+          .attr("ry", 8)
+          .attr("fill", getPercentageColor(influence))
+          .attr("opacity", 0)
+          .transition()
+          .delay(700)
+          .duration(500)
+          .attr("opacity", 0.9);
+        
         g.append("text")
           .attr("x", centroid.x)
-          .attr("y", centroid.y + 15)
+          .attr("y", centroid.y + 16)
           .attr("text-anchor", "middle")
-          .attr("fill", influence > 0.5 ? "white" : "var(--foreground)")
+          .attr("fill", influence > 0.5 ? "white" : "var(--background)")
           .style("font-size", "9px")
+          .style("font-weight", "bold")
           .style("opacity", 0)
           .text(`${Math.round(influence * 100)}% influence`)
           .transition()
@@ -150,7 +166,7 @@ export default function GeoVisualization({ entities }: GeoVisualizationProps) {
     
     // Add legend
     const legend = svg.append("g")
-      .attr("transform", `translate(${width - 120}, 20)`);
+      .attr("transform", `translate(${width - 150}, 20)`);
     
     // Legend title
     legend.append("text")
@@ -172,13 +188,34 @@ export default function GeoVisualization({ entities }: GeoVisualizationProps) {
         .attr("height", 15)
         .attr("fill", colorScale(value));
       
-      legend.append("text")
+      // Add background pill for legend percentage
+      legend.append("rect")
         .attr("x", 20)
-        .attr("y", 10 + i * 15 + 10)
-        .attr("fill", "var(--foreground)")
+        .attr("y", 10 + i * 15 + 2)
+        .attr("width", 40)
+        .attr("height", 14)
+        .attr("rx", 7)
+        .attr("ry", 7)
+        .attr("fill", getPercentageColor(value));
+      
+      legend.append("text")
+        .attr("x", 40)
+        .attr("y", 10 + i * 15 + 11)
+        .attr("text-anchor", "middle")
+        .attr("fill", value > 0.5 ? "white" : "var(--background)")
         .style("font-size", "9px")
+        .style("font-weight", "bold")
         .text(`${Math.round(value * 100)}%`);
     }
+  };
+  
+  // Helper function to get color for percentage pills
+  const getPercentageColor = (value: number): string => {
+    if (value < 0.2) return "#64b5f6"; // Light blue
+    if (value < 0.4) return "#4fc3f7"; // Blue
+    if (value < 0.6) return "#26a69a"; // Teal
+    if (value < 0.8) return "#66bb6a"; // Green
+    return "#ffa726";  // Orange for highest values
   };
   
   // Helper function to estimate the centroid of a path
