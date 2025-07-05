@@ -1,0 +1,36 @@
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "frontend/.next"
+
+[build.environment]
+  NODE_VERSION = "18.17.0"
+  NPM_FLAGS = "--legacy-peer-deps"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# For Next.js Image Optimization
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Handle Next.js routing
+[[redirects]]
+  from = "/_next/static/*"
+  to = "/_next/static/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/_next/data/*"
+  to = "/_next/data/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Handle client-side routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = false 
