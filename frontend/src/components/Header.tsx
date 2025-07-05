@@ -38,7 +38,12 @@ export default function Header() {
     { 
       name: 'Cultural Assistant', 
       path: '/cultural-assistant',
-      icon: <Sparkles className="h-4 w-4 text-qloo-yellow" />,
+      icon: <Sparkles className="h-4 w-4 text-qloo-yellow" />
+    },
+    { 
+      name: 'Cultural Tools', 
+      path: '/cultural-tools',
+      icon: <Globe className="h-4 w-4 text-qloo-teal" />,
       isNew: true
     },
     { name: 'About', path: '/about' },
