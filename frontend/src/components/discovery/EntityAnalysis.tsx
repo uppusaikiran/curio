@@ -144,7 +144,7 @@ export default function EntityAnalysis({ entity }: EntityAnalysisProps) {
         .range([0, innerWidth]);
       
       const yScale = d3.scaleBand()
-        .domain(sortedTags.map(d => d.value))
+        .domain(sortedTags.map(d => d.name))
         .range([0, innerHeight])
         .padding(0.2);
       
@@ -169,7 +169,7 @@ export default function EntityAnalysis({ entity }: EntityAnalysisProps) {
         .enter()
         .append("rect")
         .attr("class", "bar")
-        .attr("y", d => yScale(d.value) || 0)
+        .attr("y", d => yScale(d.name) || 0)
         .attr("height", yScale.bandwidth())
         .attr("x", 0)
         .attr("width", 0)
@@ -185,7 +185,7 @@ export default function EntityAnalysis({ entity }: EntityAnalysisProps) {
         .append("text")
         .attr("class", "score")
         .attr("x", d => xScale(d.score) + 5)
-        .attr("y", d => (yScale(d.value) || 0) + yScale.bandwidth() / 2 + 4)
+        .attr("y", d => (yScale(d.name) || 0) + yScale.bandwidth() / 2 + 4)
         .attr("fill", "var(--foreground)")
         .style("font-size", "12px")
         .style("opacity", 0)
@@ -201,7 +201,7 @@ export default function EntityAnalysis({ entity }: EntityAnalysisProps) {
         .append("text")
         .attr("class", "tag-type")
         .attr("x", d => 5)
-        .attr("y", d => (yScale(d.value) || 0) - 5)
+        .attr("y", d => (yScale(d.name) || 0) - 5)
         .attr("fill", "var(--muted-foreground)")
         .style("font-size", "10px")
         .style("opacity", 0)
@@ -253,7 +253,7 @@ export default function EntityAnalysis({ entity }: EntityAnalysisProps) {
         .attrTween("d", function(d) {
           const interpolate = d3.interpolate({startAngle: 0, endAngle: 0}, d);
           return function(t) {
-            return arc(interpolate(t));
+            return arc(interpolate(t)) || '';
           };
         });
       
@@ -277,7 +277,15 @@ export default function EntityAnalysis({ entity }: EntityAnalysisProps) {
         id: entity.entity_id,
         name: entity.name,
         type: entity.type,
-        radius: 40
+        radius: 40,
+        // Add these properties to satisfy SimulationNodeDatum
+        index: undefined,
+        x: undefined,
+        y: undefined,
+        vx: undefined,
+        vy: undefined,
+        fx: undefined,
+        fy: undefined
       }));
       
       // Add central entity
@@ -285,7 +293,15 @@ export default function EntityAnalysis({ entity }: EntityAnalysisProps) {
         id: analysis.entity.entity_id,
         name: analysis.entity.name,
         type: analysis.entity.type,
-        radius: 50
+        radius: 50,
+        // Add these properties to satisfy SimulationNodeDatum
+        index: undefined,
+        x: undefined,
+        y: undefined,
+        vx: undefined,
+        vy: undefined,
+        fx: undefined,
+        fy: undefined
       });
       
       // Create links from central entity to all others
@@ -318,10 +334,10 @@ export default function EntityAnalysis({ entity }: EntityAnalysisProps) {
         .enter()
         .append("g")
         .attr("class", "node")
-        .call(d3.drag()
+        .call(d3.drag<SVGGElement, typeof nodes[0]>()
           .on("start", dragstarted)
           .on("drag", dragged)
-          .on("end", dragended));
+          .on("end", dragended) as any);
       
       // Add circles for nodes
       node.append("circle")
