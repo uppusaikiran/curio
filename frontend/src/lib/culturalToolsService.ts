@@ -14,6 +14,19 @@ export type JourneyPlan = {
   itinerary: string;
   highlights: string[];
   culturalConnections: string;
+  localCuisine: string[];
+  accommodationSuggestions: {
+    name: string;
+    description: string;
+    culturalRelevance: string;
+  }[];
+  localEvents?: string[];
+  transportationTips?: string;
+  budget?: {
+    category: string;
+    estimate: string;
+    notes: string;
+  }[];
 }
 
 // Types for the Cultural Taste Profile Builder
@@ -75,11 +88,28 @@ export async function generateJourneyPlan(
       selectedEntities.map(async (entity) => {
         try {
           const details = await getEntityDetails(entity.type, entity.entity_id);
+          
+          // Get additional insights for this entity if possible
+          let relatedEntities: string[] = [];
+          try {
+            const analysis = await getAnalysis({
+              entity_type: entity.type,
+              entity_value: entity.entity_id,
+              entity_name: entity.name
+            });
+            if (analysis && analysis.related_entities) {
+              relatedEntities = analysis.related_entities.slice(0, 3).map(e => e.name);
+            }
+          } catch (insightError) {
+            console.log('Could not fetch additional insights:', insightError);
+          }
+          
           return {
             name: entity.name,
             type: entity.type.replace('urn:entity:', ''),
             tags: details.tags || [],
-            description: details.description || ''
+            description: details.properties?.description || '',
+            relatedEntities
           };
         } catch (error) {
           console.error(`Error fetching details for ${entity.name}:`, error);
@@ -87,32 +117,68 @@ export async function generateJourneyPlan(
             name: entity.name,
             type: entity.type.replace('urn:entity:', ''),
             tags: [],
-            description: ''
+            description: '',
+            relatedEntities: [] as string[]
           };
         }
       })
     );
 
-    // Create a prompt for the LLM
+    // Create a prompt for the LLM with more detailed instructions
     const prompt = `Create a personalized ${journeyDuration}-day cultural journey plan for ${location.name}, ${location.country} based on these cultural interests: 
     ${entityInfo.map(e => `${e.name} (${e.type}${e.description ? ': ' + e.description.substring(0, 100) + '...' : ''})`)
       .join('; ')}. 
     
     Include:
-    1. A catchy title for the journey
-    2. A brief description of the journey
-    3. A detailed day-by-day itinerary with morning, afternoon, and evening activities
-    4. 4-5 highlights of the journey
-    5. An explanation of how the journey connects to the user's cultural interests
+    1. A catchy title for the journey that reflects the user's taste profile
+    2. A brief but compelling description of the journey (2-3 sentences)
+    3. A detailed day-by-day itinerary with morning, afternoon, and evening activities that specifically connect to the user's cultural interests
+    4. 5-7 highlights of the journey that showcase unique experiences
+    5. A thoughtful explanation of how the journey connects to the user's cultural interests
+    6. 3-5 local cuisine recommendations that align with the user's taste profile
+    7. 2-3 accommodation suggestions with descriptions and cultural relevance
+    8. Local events or seasonal activities if applicable
+    9. Transportation tips for getting around the destination
+    10. Budget estimates for different categories (accommodations, food, activities, etc.)
     
-    Format as JSON with these keys: title, description, itinerary (markdown format), highlights (array), culturalConnections`;
+    For each activity in the itinerary:
+    - Be specific about venues, neighborhoods, and experiences
+    - Explain the cultural significance and connection to the user's interests
+    - Include practical details like opening hours, reservation needs, etc. when relevant
+    - Suggest alternatives for weather or availability issues
+    
+    Format as JSON with these keys: 
+    - title
+    - description
+    - itinerary (markdown format with detailed day plans)
+    - highlights (array)
+    - culturalConnections (detailed paragraph)
+    - localCuisine (array of food recommendations)
+    - accommodationSuggestions (array of objects with name, description, culturalRelevance)
+    - localEvents (array, optional)
+    - transportationTips (string, optional)
+    - budget (array of objects with category, estimate, notes)`;
 
-    // Context for the LLM
+    // Context for the LLM with more specific guidance
     const context = `You are a cultural travel expert creating personalized journey plans.
     The user has expressed interest in these cultural entities: ${entityInfo.map(e => e.name).join(', ')}.
+    
+    Related entities that might inform your recommendations include: ${entityInfo.flatMap(e => e.relatedEntities).join(', ')}
+    
     Create an authentic, immersive cultural experience in ${location.name} that connects to these interests.
     Include specific locations, activities, and cultural experiences that would be meaningful based on their taste profile.
-    The itinerary should be realistic for a ${journeyDuration}-day trip.`;
+    The itinerary should be realistic for a ${journeyDuration}-day trip.
+    
+    Focus on creating a journey that feels personalized and tailored specifically to this user's unique interests.
+    Include hidden gems and local experiences that tourists might miss.
+    
+    Consider the following when crafting the journey:
+    - Balance between popular attractions and off-the-beaten-path experiences
+    - Pacing appropriate for the duration (not too rushed or too slow)
+    - Logical geographic flow to minimize travel time
+    - Variety of activities (museums, performances, workshops, nature, food, etc.)
+    - Opportunities for both structured activities and free exploration
+    - Cultural significance of each recommendation and its connection to the user's interests`;
 
     // Get response from LLM
     const response = await getPerplexityResponse(prompt, context);
@@ -131,7 +197,18 @@ export async function generateJourneyPlan(
         description: journeyPlan.description || `A ${journeyDuration}-day cultural journey through ${location.name}`,
         itinerary: journeyPlan.itinerary || `## Day 1\n- Explore ${location.name}`,
         highlights: journeyPlan.highlights || ["Personalized cultural experiences"],
-        culturalConnections: journeyPlan.culturalConnections || `This journey connects to your interests in ${entityInfo.map(e => e.name).join(', ')}`
+        culturalConnections: journeyPlan.culturalConnections || `This journey connects to your interests in ${entityInfo.map(e => e.name).join(', ')}`,
+        localCuisine: journeyPlan.localCuisine || ["Local specialties based on your taste profile"],
+        accommodationSuggestions: journeyPlan.accommodationSuggestions || [
+          {
+            name: "Culturally relevant accommodation",
+            description: "A place that reflects your interests",
+            culturalRelevance: "Connected to your taste profile"
+          }
+        ],
+        localEvents: journeyPlan.localEvents,
+        transportationTips: journeyPlan.transportationTips,
+        budget: journeyPlan.budget
       };
     } catch (error) {
       console.error("Failed to parse journey plan JSON:", error);
@@ -161,7 +238,24 @@ ${journeyDuration > 2 ? `## Day 3: Connection
           "Customized experiences based on your specific interests",
           "Authentic cultural immersion beyond typical tourist experiences"
         ],
-        culturalConnections: `Your interest in ${entityInfo.map(e => e.name).join(', ')} connects deeply with ${location.name}'s cultural scene.`
+        culturalConnections: `Your interest in ${entityInfo.map(e => e.name).join(', ')} connects deeply with ${location.name}'s cultural scene.`,
+        localCuisine: [
+          `${location.name}'s signature dishes`,
+          "Local specialties that align with your taste preferences",
+          "Hidden gem restaurants favored by locals"
+        ],
+        accommodationSuggestions: [
+          {
+            name: "Boutique Hotel in Cultural District",
+            description: "A charming hotel in the heart of the cultural district with unique design elements.",
+            culturalRelevance: "Located near major cultural attractions and designed with local artistic influences."
+          },
+          {
+            name: "Artist Residency Guesthouse",
+            description: "A guesthouse that doubles as an artist residency program.",
+            culturalRelevance: "Opportunity to interact with local and international artists in an intimate setting."
+          }
+        ]
       };
     }
   } catch (error) {
@@ -185,9 +279,13 @@ export async function generateTasteProfile(
     
     // Get insights from Qloo API
     const insights = await Promise.all(
-      entityIds.map(async (id) => {
+      entityIds.map(async (id, index) => {
         try {
-          const analysis = await getAnalysis(selectedEntities[0].type, id);
+          const analysis = await getAnalysis({
+            entity_type: selectedEntities[index].type,
+            entity_value: id,
+            entity_name: selectedEntities[index].name
+          });
           return analysis;
         } catch (error) {
           console.error(`Error fetching analysis for entity ${id}:`, error);

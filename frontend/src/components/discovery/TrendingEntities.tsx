@@ -10,6 +10,7 @@ import {
 } from '@/lib/qlooService';
 import { QlooTrendingEntity, QlooEntity, QlooAnalysisResult } from '@/types/qloo';
 import Image from 'next/image';
+import { getEntityImage } from '@/lib/utils';
 
 // Define a proper error type
 interface EntityError {
@@ -204,22 +205,6 @@ export default function TrendingEntities({ onEntitySelect }: { onEntitySelect?: 
     setAnalysisResult(null);
     setRelatedEntities(null);
     setError(null);
-  };
-  
-  const getEntityImage = (entity: QlooTrendingEntity) => {
-    // First, try to get the image URL from the entity properties
-    if (entity.properties?.image?.url) {
-      return entity.properties.image.url;
-    }
-    
-    // For backward compatibility and fallback, generate a consistent placeholder
-    // Use a stable seed based on entity ID or name to ensure consistent rendering
-    const type = entity.type?.split(':').pop() || 'movie';
-    const name = entity.name || 'Unknown';
-    const seed = entity.entity_id || `${type}-${name}`;
-    
-    // Use a stable seed that will be the same on both server and client
-    return `https://picsum.photos/seed/${encodeURIComponent(seed)}/300/450`;
   };
   
   const getEntityColor = (entity: QlooTrendingEntity) => {

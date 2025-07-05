@@ -8,6 +8,7 @@ import { QlooEntityType, QlooEntity } from '@/types/qloo';
 import axios from 'axios';
 import ApiTroubleshooter from './ApiTroubleshooter';
 import PreselectedTagsSelector, { SelectOption } from './PreselectedTagsSelector';
+import { getEntityImage } from '@/lib/utils';
 
 interface EntitySearchProps {
   onEntitySelect: (entity: QlooEntity) => void;
@@ -283,18 +284,36 @@ export default function EntitySearch({ onEntitySelect }: EntitySearchProps) {
       {searchResults.length > 0 && (
         <div className="mt-6">
           <h3 className="text-xl font-semibold mb-3">Results</h3>
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {searchResults.map((entity, index) => (
               <motion.div
                 key={entity.entity_id || index}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="p-3 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer"
+                className="flex border border-gray-200 rounded hover:bg-gray-50 cursor-pointer overflow-hidden"
                 onClick={() => onEntitySelect(entity)}
               >
-                <div className="font-medium">{entity.name}</div>
-                {entity.type && <div className="text-sm text-gray-500">{entity.type}</div>}
+                <div className="flex-shrink-0 w-20 h-28 bg-gray-200 overflow-hidden">
+                  <img 
+                    src={getEntityImage(entity)} 
+                    alt={entity.name || 'Entity'} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex-grow p-3">
+                  <div className="font-medium">{entity.name}</div>
+                  {entity.type && (
+                    <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded inline-block mt-1">
+                      {entity.type.replace('urn:entity:', '')}
+                    </div>
+                  )}
+                  {entity.properties?.description && (
+                    <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                      {entity.properties.description}
+                    </p>
+                  )}
+                </div>
               </motion.div>
             ))}
           </div>

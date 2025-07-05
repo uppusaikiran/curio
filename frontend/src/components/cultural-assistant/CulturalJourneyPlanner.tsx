@@ -20,6 +20,8 @@ export default function CulturalJourneyPlanner({ selectedEntities }: CulturalJou
     { name: 'Paris', country: 'France' },
     { name: 'London', country: 'UK' },
     { name: 'Berlin', country: 'Germany' },
+    { name: 'Barcelona', country: 'Spain' },
+    { name: 'Seoul', country: 'South Korea' },
   ]);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [journeyDuration, setJourneyDuration] = useState<number>(3);
@@ -80,14 +82,14 @@ export default function CulturalJourneyPlanner({ selectedEntities }: CulturalJou
           {/* Location Selection */}
           <div>
             <h3 className="text-md font-medium mb-3">Select a Destination</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
               {locations.map((location) => (
                 <button
                   key={`${location.name}-${location.country}`}
                   onClick={() => setSelectedLocation(location)}
                   className={`p-3 text-sm rounded-md border transition-colors ${
                     selectedLocation === location
-                      ? 'border-qloo-teal bg-qloo-teal/10'
+                      ? 'border-qloo-teal bg-qloo-teal/20 text-qloo-teal font-bold'
                       : 'border-muted-foreground/20 hover:border-qloo-teal/50'
                   }`}
                 >
@@ -107,14 +109,14 @@ export default function CulturalJourneyPlanner({ selectedEntities }: CulturalJou
           {/* Duration Selection */}
           <div>
             <h3 className="text-md font-medium mb-3">Journey Duration</h3>
-            <div className="flex items-center space-x-2">
-              {[1, 2, 3, 5, 7, 10].map((days) => (
+            <div className="flex flex-wrap items-center gap-2">
+              {[1, 2, 3, 5, 7, 10, 14].map((days) => (
                 <button
                   key={days}
                   onClick={() => setJourneyDuration(days)}
                   className={`px-4 py-2 rounded-md transition-colors ${
                     journeyDuration === days
-                      ? 'bg-qloo-teal text-white'
+                      ? 'bg-qloo-teal text-qloo-black font-bold'
                       : 'bg-muted hover:bg-muted/80'
                   }`}
                 >
@@ -153,10 +155,12 @@ export default function CulturalJourneyPlanner({ selectedEntities }: CulturalJou
               </div>
               
               <Tabs defaultValue="itinerary" className="w-full">
-                <TabsList className="grid grid-cols-3 w-full">
+                <TabsList className="grid grid-cols-5 w-full">
                   <TabsTrigger value="itinerary">Itinerary</TabsTrigger>
                   <TabsTrigger value="highlights">Highlights</TabsTrigger>
-                  <TabsTrigger value="connections">Cultural Connections</TabsTrigger>
+                  <TabsTrigger value="cuisine">Local Cuisine</TabsTrigger>
+                  <TabsTrigger value="accommodations">Accommodations</TabsTrigger>
+                  <TabsTrigger value="details">More Details</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="itinerary" className="p-4">
@@ -178,10 +182,95 @@ export default function CulturalJourneyPlanner({ selectedEntities }: CulturalJou
                       </li>
                     ))}
                   </ul>
+                  
+                  <div className="mt-6 pt-6 border-t border-muted">
+                    <h4 className="font-medium mb-2">Cultural Connections</h4>
+                    <p className="text-sm">{journeyPlan.culturalConnections}</p>
+                  </div>
                 </TabsContent>
                 
-                <TabsContent value="connections" className="p-4">
-                  <p className="text-sm">{journeyPlan.culturalConnections}</p>
+                <TabsContent value="cuisine" className="p-4">
+                  <h4 className="font-medium mb-3">Local Cuisine Recommendations</h4>
+                  <ul className="space-y-3">
+                    {journeyPlan.localCuisine.map((dish, index) => (
+                      <li key={index} className="flex items-start">
+                        <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-qloo-yellow/20 text-qloo-yellow text-xs mr-2 mt-0.5">
+                          🍽️
+                        </span>
+                        <span>{dish}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </TabsContent>
+                
+                <TabsContent value="accommodations" className="p-4">
+                  <h4 className="font-medium mb-3">Accommodation Suggestions</h4>
+                  <div className="space-y-4">
+                    {journeyPlan.accommodationSuggestions.map((accommodation, index) => (
+                      <div key={index} className="p-3 border border-muted rounded-md">
+                        <h5 className="font-medium">{accommodation.name}</h5>
+                        <p className="text-sm mt-1">{accommodation.description}</p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          <span className="font-medium">Cultural Relevance:</span> {accommodation.culturalRelevance}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="details" className="p-4">
+                  <div className="space-y-6">
+                    {journeyPlan.localEvents && journeyPlan.localEvents.length > 0 && (
+                      <div>
+                        <h4 className="font-medium mb-2">Local Events & Seasonal Activities</h4>
+                        <ul className="space-y-2">
+                          {journeyPlan.localEvents.map((event, index) => (
+                            <li key={index} className="flex items-start">
+                              <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-qloo-teal/20 text-qloo-teal text-xs mr-2 mt-0.5">
+                                📅
+                              </span>
+                              <span>{event}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {journeyPlan.transportationTips && (
+                      <div>
+                        <h4 className="font-medium mb-2">Transportation Tips</h4>
+                        <div className="p-3 bg-muted/50 rounded-md">
+                          <p className="text-sm">{journeyPlan.transportationTips}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {journeyPlan.budget && journeyPlan.budget.length > 0 && (
+                      <div>
+                        <h4 className="font-medium mb-2">Budget Estimates</h4>
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-muted">
+                                <th className="text-left py-2 px-3">Category</th>
+                                <th className="text-left py-2 px-3">Estimate</th>
+                                <th className="text-left py-2 px-3">Notes</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {journeyPlan.budget.map((item, index) => (
+                                <tr key={index} className="border-b border-muted/50">
+                                  <td className="py-2 px-3 font-medium">{item.category}</td>
+                                  <td className="py-2 px-3">{item.estimate}</td>
+                                  <td className="py-2 px-3 text-xs">{item.notes}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </TabsContent>
               </Tabs>
               

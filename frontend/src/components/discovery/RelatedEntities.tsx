@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { getInsights } from '@/lib/qlooService';
 import { QlooEntity, QlooInsight } from '@/types/qloo';
+import { getEntityImage } from '@/lib/utils';
 
 interface RelatedEntitiesProps {
   entity: QlooEntity | null;
@@ -137,23 +138,37 @@ export default function RelatedEntities({ entity, onEntitySelect }: RelatedEntit
               key={insight.entity_id}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              className="bg-background rounded-md p-4 cursor-pointer border border-qloo-yellow/10 hover:border-qloo-yellow transition-colors"
+              className="bg-background rounded-md overflow-hidden cursor-pointer border border-qloo-yellow/10 hover:border-qloo-yellow transition-colors flex"
               onClick={() => onEntitySelect(insight)}
             >
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-medium truncate pr-2">{insight.name}</h3>
-                <span className="text-xs font-semibold bg-qloo-yellow/80 text-qloo-black px-2 py-1 rounded-full">
-                  {Math.round((insight.score || 0) * 100)}%
-                </span>
+              <div className="w-16 h-24 bg-gray-200 flex-shrink-0">
+                <img 
+                  src={getEntityImage(insight)} 
+                  alt={insight.name || 'Entity'} 
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <div className="flex justify-between items-center">
-                <span className={`text-xs px-2 py-1 rounded-full ${getTypeColor(insight.type)}`}>
-                  {insight.type}
-                </span>
-                {insight.subtype && (
-                  <span className="text-xs text-muted-foreground">
-                    {insight.subtype}
+              <div className="p-3 flex-grow">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-medium truncate pr-2">{insight.name}</h3>
+                  <span className="text-xs font-semibold bg-qloo-yellow/80 text-qloo-black px-2 py-1 rounded-full">
+                    {Math.round((insight.score || 0) * 100)}%
                   </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className={`text-xs px-2 py-1 rounded-full ${getTypeColor(insight.type)}`}>
+                    {insight.type}
+                  </span>
+                  {insight.subtype && (
+                    <span className="text-xs text-muted-foreground">
+                      {insight.subtype}
+                    </span>
+                  )}
+                </div>
+                {insight.properties?.description && (
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                    {insight.properties.description}
+                  </p>
                 )}
               </div>
             </motion.div>

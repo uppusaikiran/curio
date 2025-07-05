@@ -9,6 +9,7 @@ import { useAuthContext } from '@/providers/AuthProvider';
 import { useTheme } from '@/providers/ThemeProvider';
 import { usePathname } from 'next/navigation';
 import Avatar from './Avatar';
+import Image from 'next/image';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -32,7 +33,6 @@ export default function Header() {
 
   // Navigation items with active state detection
   const navItems = [
-    { name: 'Home', path: '/' },
     { name: 'Discover', path: '/discover' },
     { 
       name: 'Cultural Assistant', 
@@ -61,7 +61,13 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <div className="flex items-center">
-              <Globe className="h-6 w-6 text-qloo-yellow mr-2" />
+              <Image 
+                src="/curio_logo.png" 
+                alt="Curio Logo" 
+                width={32} 
+                height={32} 
+                className="mr-2" 
+              />
               <span className="font-bold text-2xl">
                 <span className="gradient-text">Curio</span>
               </span>

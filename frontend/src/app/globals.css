@@ -22,6 +22,12 @@
   --input: #e5e5e5;
   --ring: var(--qloo-yellow);
   --radius: 0.5rem;
+  
+  /* ElevenLabs Convai widget variables */
+  --convai-primary-color: var(--qloo-teal);
+  --convai-secondary-color: var(--qloo-yellow);
+  --convai-background-color: var(--background);
+  --convai-text-color: var(--foreground);
 }
 
 @theme inline {
@@ -38,6 +44,10 @@
   --muted-foreground: #a0a0a0;
   --border: #333333;
   --input: #333333;
+  
+  /* ElevenLabs Convai widget variables for dark mode */
+  --convai-background-color: var(--background);
+  --convai-text-color: var(--foreground);
 }
 
 body {
@@ -52,4 +62,13 @@ body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   text-fill-color: transparent;
+}
+
+/* ElevenLabs Convai widget custom styles */
+.elevenlabs-convai-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  border-radius: var(--radius);
+  overflow: hidden;
 }

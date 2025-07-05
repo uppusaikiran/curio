@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { QlooEntity } from '@/types/qloo';
+import { getEntityImage } from '@/lib/utils';
 
 interface WordCloudVisualizationProps {
   entities: QlooEntity[];
@@ -12,21 +13,37 @@ interface WordCloudItem {
   text: string;
   size: number;
   color: string;
+  entityId?: string; // Add entityId for image reference
 }
 
 export default function WordCloudVisualization({ entities }: WordCloudVisualizationProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const [entityImages, setEntityImages] = useState<Record<string, string>>({});
+  
+  // Collect entity images when entities change
+  useEffect(() => {
+    if (entities.length === 0) return;
+    
+    const images: Record<string, string> = {};
+    entities.forEach(entity => {
+      if (entity.entity_id) {
+        images[entity.entity_id] = getEntityImage(entity);
+      }
+    });
+    
+    setEntityImages(images);
+  }, [entities]);
   
   // Generate word cloud data from entities
   const generateWordCloudData = (): WordCloudItem[] => {
     if (entities.length === 0) return [];
     
     // Extract tags and properties from entities
-    const words: Record<string, number> = {};
+    const words: Record<string, { count: number, entityId?: string }> = {};
     
     entities.forEach(entity => {
       // Add entity name
-      addWord(words, entity.name, 10);
+      addWord(words, entity.name, 10, entity.entity_id);
       
       // Add entity type
       addWord(words, entity.type.replace('urn:entity:', ''), 8);
@@ -73,7 +90,11 @@ export default function WordCloudVisualization({ entities }: WordCloudVisualizat
     
     // Convert to array and sort by frequency
     const sortedWords = Object.entries(words)
-      .map(([text, count]) => ({ text, size: count }))
+      .map(([text, data]) => ({ 
+        text, 
+        size: data.count,
+        entityId: data.entityId 
+      }))
       .sort((a, b) => b.size - a.size)
       .slice(0, 50); // Limit to 50 words
     
@@ -90,10 +111,23 @@ export default function WordCloudVisualization({ entities }: WordCloudVisualizat
   };
   
   // Helper to add word to the frequency map
-  const addWord = (words: Record<string, number>, word: string, weight: number = 1) => {
+  const addWord = (
+    words: Record<string, { count: number, entityId?: string }>, 
+    word: string, 
+    weight: number = 1, 
+    entityId?: string
+  ) => {
     const cleanWord = word.toLowerCase().trim();
     if (cleanWord && !stopWords.includes(cleanWord)) {
-      words[cleanWord] = (words[cleanWord] || 0) + weight;
+      if (!words[cleanWord]) {
+        words[cleanWord] = { count: weight, entityId };
+      } else {
+        words[cleanWord].count += weight;
+        // Keep the entityId if it's from an entity name
+        if (entityId && !words[cleanWord].entityId) {
+          words[cleanWord].entityId = entityId;
+        }
+      }
     }
   };
   
@@ -112,7 +146,7 @@ export default function WordCloudVisualization({ entities }: WordCloudVisualizat
     if (!svgRef.current || entities.length === 0) return;
     
     renderWordCloud();
-  }, [entities]);
+  }, [entities, entityImages]);
   
   // Render the word cloud visualization
   const renderWordCloud = () => {
@@ -125,12 +159,54 @@ export default function WordCloudVisualization({ entities }: WordCloudVisualizat
     const width = svgRef.current.clientWidth;
     const height = svgRef.current.clientHeight;
     
+    // Add entity images as background pattern definitions
+    const defs = svg.append("defs");
+    
+    Object.entries(entityImages).forEach(([entityId, imageUrl], index) => {
+      const patternId = `entity-image-${entityId.replace(/[^a-zA-Z0-9]/g, '')}`;
+      
+      defs.append("pattern")
+        .attr("id", patternId)
+        .attr("patternUnits", "userSpaceOnUse")
+        .attr("width", 60)
+        .attr("height", 60)
+        .attr("x", 0)
+        .attr("y", 0)
+        .append("image")
+        .attr("xlink:href", imageUrl)
+        .attr("width", 60)
+        .attr("height", 60)
+        .attr("preserveAspectRatio", "xMidYMid slice");
+    });
+    
     // Generate word cloud data
     const words = generateWordCloudData();
     
     // Create a group for the visualization
     const g = svg.append("g")
       .attr("transform", `translate(${width / 2},${height / 2})`);
+    
+    // Add a subtle background with entity images
+    const topEntities = entities.slice(0, Math.min(5, entities.length));
+    topEntities.forEach((entity, index) => {
+      if (entity.entity_id) {
+        const size = Math.min(width, height) * 0.3;
+        const angle = (index / topEntities.length) * Math.PI * 2;
+        const distance = Math.min(width, height) * 0.25;
+        const x = Math.cos(angle) * distance;
+        const y = Math.sin(angle) * distance;
+        
+        const patternId = `entity-image-${entity.entity_id.replace(/[^a-zA-Z0-9]/g, '')}`;
+        
+        g.append("circle")
+          .attr("cx", x)
+          .attr("cy", y)
+          .attr("r", size / 4)
+          .attr("fill", `url(#${patternId})`)
+          .attr("opacity", 0.15)
+          .attr("filter", "blur(2px)");
+      }
+    });
     
     // Create a simple word cloud layout
     // Note: In a real implementation, you might want to use d3-cloud library
@@ -152,6 +228,24 @@ export default function WordCloudVisualization({ entities }: WordCloudVisualizat
       
       const x = distance * Math.cos(angle);
       const y = distance * Math.sin(angle);
+      
+      // If the word has an associated entity with an image, add a small image icon
+      if (word.entityId && entityImages[word.entityId]) {
+        const patternId = `entity-image-${word.entityId.replace(/[^a-zA-Z0-9]/g, '')}`;
+        
+        g.append("circle")
+          .attr("cx", x)
+          .attr("cy", y - fontScale(word.size)/2 - 10)
+          .attr("r", fontScale(word.size)/3)
+          .attr("fill", `url(#${patternId})`)
+          .attr("opacity", 0)
+          .attr("stroke", word.color)
+          .attr("stroke-width", 2)
+          .transition()
+          .delay(i * 20)
+          .duration(500)
+          .attr("opacity", 1);
+      }
       
       g.append("text")
         .attr("x", x)

@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from '@/providers/AuthProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import { Footer } from '@/components/ui/footer';
+import ElevenLabsWidget from '@/components/ElevenLabsWidget';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,8 +17,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Curio - AI Voice Assistant",
-  description: "A modern AI voice assistant for the web",
+  title: "Curio - Cultural Intelligence Assistant",
+  description: "Discover connections across music, film, dining, fashion, and more with Qloo's Taste AI™",
+  icons: {
+    icon: [
+      { url: '/curio_logo.png', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/curio_logo.png' }
+    ]
+  }
 };
 
 export default function RootLayout({
@@ -38,6 +47,7 @@ export default function RootLayout({
               </div>
               <Footer />
             </div>
+            <ElevenLabsWidget />
           </AuthProvider>
         </ThemeProvider>
       </body>

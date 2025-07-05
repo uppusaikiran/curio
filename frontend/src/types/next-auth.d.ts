@@ -7,6 +7,20 @@ declare module "next-auth" {
   }
 
   interface Session {
-    user: User
+    user: {
+      id: string
+      email: string
+      name?: string
+      image?: string
+    }
+  }
+}
+
+// Declare ElevenLabs Convai custom element
+declare namespace JSX {
+  interface IntrinsicElements {
+    'elevenlabs-convai': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
+      'agent-id': string
+    }, HTMLElement>
   }
 } 

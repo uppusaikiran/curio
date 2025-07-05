@@ -5,16 +5,10 @@ import Header from '@/components/Header';
 import Avatar from '@/components/Avatar';
 import Conversation from '@/components/Conversation';
 import { useRecordingState, useProcessingState, useConversationState } from '@/lib/store';
-import dynamic from 'next/dynamic';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-
-// Dynamically import AudioRecorder with no SSR to prevent "Worker is not defined" error
-const AudioRecorder = dynamic(
-  () => import('@/components/AudioRecorder'),
-  { ssr: false }
-);
+import Image from 'next/image';
 
 export default function Home() {
   const { isRecording } = useRecordingState();
@@ -28,6 +22,15 @@ export default function Home() {
       <main className="flex min-h-screen flex-col items-center bg-background">
         <Container className="py-16">
           <div className="max-w-4xl mx-auto">
+            <div className="flex justify-center mb-6">
+              <Image 
+                src="/curio_logo.png" 
+                alt="Curio Logo" 
+                width={80} 
+                height={80} 
+                priority
+              />
+            </div>
             <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl mb-6 text-center">
               <span className="gradient-text">Curio</span> - Cultural Intelligence Assistant
             </h1>
@@ -57,11 +60,6 @@ export default function Home() {
                     history={conversationHistory}
                     lastResponse={lastResponse}
                   />
-                </div>
-
-                {/* Audio Controls */}
-                <div className="w-full flex justify-center mt-8">
-                  <AudioRecorder />
                 </div>
               </>
             ) : (
