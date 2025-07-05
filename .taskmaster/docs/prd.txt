@@ -1,4 +1,83 @@
-<context>
+# Curio: Cultural Discovery Platform
+
+## Project Overview
+Curio is a cultural discovery platform that leverages the Qloo API to provide personalized recommendations and insights across multiple domains including movies, TV shows, books, music, and more. The platform aims to help users discover new content based on their preferences and explore cultural connections between different media types.
+
+## Key Features
+
+### User Authentication
+- User registration and login functionality
+- Secure authentication with JWT tokens
+- User profile management
+
+### Discovery Features
+- Entity search across multiple domains (movies, TV shows, books, music, etc.)
+- Trending content discovery with filters and sorting options
+- Detailed entity analysis with tags, audiences, and cultural context
+- Cross-domain recommendations (e.g., "If you like this movie, you might enjoy this book")
+- Related entity recommendations within the same domain
+
+### Insights Dashboard
+- Personalized insights based on user preferences
+- Cultural trend analysis
+- Interactive data visualizations
+- Custom query builder for exploring the cultural graph
+
+### Cultural Assistant
+- AI-powered conversational interface for cultural recommendations
+- Voice input capabilities for natural interaction
+- Conversation history tracking and management
+
+### Settings and Preferences
+- User preference management
+- API configuration options
+- Theme customization (light/dark mode)
+
+## Technical Requirements
+
+### Frontend
+- Next.js with TypeScript for the frontend application
+- Responsive design that works well on mobile and desktop
+- Tailwind CSS for styling
+- Client-side state management with a custom store
+- Integration with the Qloo API for cultural data
+- Integration with the backend API for user data and audio processing
+
+### Backend
+- Fastify with TypeScript for the backend server
+- Prisma ORM for database interactions
+- SQLite database for development (with potential migration to PostgreSQL for production)
+- JWT-based authentication system
+- Audio processing capabilities for voice input
+- Integration with AI services for the cultural assistant
+
+## User Stories
+
+1. As a new user, I want to create an account so I can save my preferences and history.
+2. As a returning user, I want to log in to access my personalized recommendations.
+3. As a user, I want to search for movies, books, or music by name to find specific content.
+4. As a user, I want to see trending content across different domains to discover what's popular.
+5. As a user, I want to view detailed information about a specific entity to learn more about it.
+6. As a user, I want to see related recommendations based on content I like to discover new media.
+7. As a user, I want to use the insights dashboard to explore cultural connections between different media types.
+8. As a user, I want to interact with a cultural assistant through text or voice to get personalized recommendations.
+9. As a user, I want to customize my settings and preferences to improve my experience.
+10. As a user, I want to view my conversation history with the cultural assistant to reference past recommendations.
+
+## Deployment Requirements
+- Frontend deployment on Vercel
+- Backend deployment on a suitable cloud platform
+- Environment variable management for API keys and secrets
+- Proper error handling and logging
+- Performance optimization for API calls and data processing
+
+## Future Enhancements (Post-MVP)
+- Social features for sharing recommendations
+- Machine learning models for improved personalization
+- Integration with additional cultural APIs
+- Mobile applications for iOS and Android
+- Advanced analytics and reporting features
+
 # Curio: Product Requirements Document (PRD)
 
 * **Version:** 1.0

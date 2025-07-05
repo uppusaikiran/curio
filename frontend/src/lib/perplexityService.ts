@@ -12,6 +12,88 @@ const perplexityApi = axios.create({
 });
 
 /**
+ * Helper function to handle API error responses
+ * @param error The error object from axios
+ * @returns A formatted error response
+ */
+export function handleErrorResponse(error: any) {
+  if (error.response) {
+    // The request was made and the server responded with a status code
+    // that falls out of the range of 2xx
+    const status = error.response.status;
+    const data = error.response.data;
+    
+    if (status === 403) {
+      return {
+        error: {
+          reason: "Forbidden",
+          message: "You do not have permission to access this resource. Please check your API key permissions.",
+          code: 403,
+          request_id: data.request_id || "unknown"
+        }
+      };
+    } else if (status === 401) {
+      return {
+        error: {
+          reason: "Unauthorized",
+          message: "Authentication failed. Please check your API key.",
+          code: 401,
+          request_id: data.request_id || "unknown"
+        }
+      };
+    } else if (status === 404) {
+      return {
+        error: {
+          reason: "Not Found",
+          message: "The requested resource was not found.",
+          code: 404,
+          request_id: data.request_id || "unknown"
+        }
+      };
+    } else if (status === 429) {
+      return {
+        error: {
+          reason: "Rate Limited",
+          message: "You've exceeded the API rate limit. Please try again later.",
+          code: 429,
+          request_id: data.request_id || "unknown"
+        }
+      };
+    } else {
+      // Generic error handling for other status codes
+      return {
+        error: {
+          reason: "API Error",
+          message: data.message || "An error occurred while processing your request.",
+          code: status,
+          request_id: data.request_id || "unknown"
+        }
+      };
+    }
+  } else if (error.request) {
+    // The request was made but no response was received
+    return {
+      error: {
+        reason: "No Response",
+        message: "No response received from the server. Please check your network connection.",
+        code: 0,
+        request_id: "unknown"
+      }
+    };
+  } else {
+    // Something happened in setting up the request that triggered an Error
+    return {
+      error: {
+        reason: "Request Error",
+        message: error.message || "An error occurred while setting up the request.",
+        code: 0,
+        request_id: "unknown"
+      }
+    };
+  }
+}
+
+/**
  * Get a response from Perplexity based on a prompt and context
  * @param prompt The user's prompt/question
  * @param context Additional context to inform the response
@@ -44,7 +126,7 @@ export async function getPerplexityResponse(prompt: string, context: string) {
     return response.data.choices[0].message.content;
   } catch (error) {
     console.error('Error getting response from Perplexity:', error);
-    throw error;
+    return handleErrorResponse(error);
   }
 }
 
@@ -92,7 +174,7 @@ export async function getCulturalContext(entityType: string, entityName: string)
     }
   } catch (error) {
     console.error('Error fetching cultural context from Perplexity:', error);
-    throw error;
+    return handleErrorResponse(error);
   }
 }
 
@@ -128,11 +210,14 @@ export async function getCrossDomainRecommendations(entityType: string, entityNa
       return JSON.parse(content);
     } catch (e) {
       console.error("Failed to parse JSON from Perplexity response:", content);
-      return [];
+      return handleErrorResponse({
+        message: "Failed to parse recommendations response",
+        response: { status: 500, data: { message: "Invalid response format" } }
+      });
     }
   } catch (error) {
     console.error('Error fetching cross-domain recommendations from Perplexity:', error);
-    throw error;
+    return handleErrorResponse(error);
   }
 }
 
@@ -170,16 +255,14 @@ export async function analyzeCulturalTrend(trend: string) {
       return JSON.parse(content);
     } catch (e) {
       console.error("Failed to parse JSON from Perplexity response:", content);
-      return {
-        analysis: "Analysis not available",
-        culturalFactors: "Information not available",
-        connections: "Information not available",
-        predictions: "Information not available"
-      };
+      return handleErrorResponse({
+        message: "Failed to parse trend analysis response",
+        response: { status: 500, data: { message: "Invalid response format" } }
+      });
     }
   } catch (error) {
     console.error('Error analyzing cultural trend with Perplexity:', error);
-    throw error;
+    return handleErrorResponse(error);
   }
 }
 

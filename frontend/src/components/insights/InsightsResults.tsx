@@ -21,6 +21,16 @@ interface ExtendedInsight extends QlooInsight {
   };
 }
 
+// Interface for API error responses
+interface ApiErrorResponse {
+  error: {
+    reason: string;
+    message: string;
+    code: number;
+    request_id: string;
+  };
+}
+
 export default function InsightsResults({ insights, isLoading, error }: InsightsResultsProps) {
   // Use null as initial state to prevent hydration mismatch
   const [selectedEntity, setSelectedEntity] = useState<QlooEntity | null>(null);
@@ -57,17 +67,35 @@ export default function InsightsResults({ insights, isLoading, error }: Insights
         true, // include tags
         true  // include metrics
       );
+      
+      // Check if the response is an error object
+      if ((entityDetails as any)?.error) {
+        const errorResponse = entityDetails as unknown as ApiErrorResponse;
+        throw new Error(`${errorResponse.error.reason}: ${errorResponse.error.message} (Code: ${errorResponse.error.code})`);
+      }
+      
       setSelectedEntity(entityDetails);
     } catch (err: any) {
       console.error('Failed to fetch entity details:', err);
-      // Log the error but don't show it to the user if it's a "not found" error
-      if (err.message?.includes('Entity not found') || err.response?.status === 404) {
-        console.log('Entity not found in Qloo database:', insight.entity_id);
-        // Don't set error message for the user
-      } else {
-        // For other types of errors, we can set the error message
-        setDetailsError(`Failed to load entity analysis. ${err.message || 'Unknown error occurred'}`);
+      
+      // Handle API error responses
+      if (err.response?.data?.error) {
+        const apiError = err.response.data.error;
+        setDetailsError(`${apiError.reason}: ${apiError.message}`);
+      } 
+      // Handle formatted error responses
+      else if (err.error) {
+        setDetailsError(`${err.error.reason}: ${err.error.message}`);
       }
+      // Handle standard error objects
+      else if (err.message) {
+        setDetailsError(err.message);
+      } 
+      // Fallback error message
+      else {
+        setDetailsError('Failed to load entity details. Please try again later.');
+      }
+      
       // Still set the basic insight data as a fallback
       setSelectedEntity(insight as unknown as QlooEntity);
     } finally {

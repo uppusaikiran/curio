@@ -144,11 +144,70 @@ function getHeaders() {
 export async function getInsights(params: Record<string, any> = {}): Promise<QlooInsight[]> {
   try {
     const queryString = buildQueryString(params);
-    const response = await qlooApi.get(`/v2/insights/${queryString}`);
-    return response.data.results?.entities || [];
-  } catch (error) {
+    
+    try {
+      const response = await qlooApi.get(`/v2/insights/${queryString}`);
+      return response.data.results?.entities || [];
+    } catch (apiError: any) {
+      // Handle API-specific errors
+      if (apiError.response?.status === 404) {
+        return {
+          error: {
+            reason: "Not Found",
+            message: "The requested insights were not found",
+            code: 404,
+            request_id: apiError.response.data?.request_id || "unknown"
+          }
+        } as any;
+      } else if (apiError.response?.status === 403) {
+        return {
+          error: {
+            reason: "Forbidden",
+            message: "You don't have permission to access these insights. Please check your API key permissions.",
+            code: 403,
+            request_id: apiError.response.data?.request_id || "unknown"
+          }
+        } as any;
+      } else if (apiError.response?.status === 401) {
+        return {
+          error: {
+            reason: "Unauthorized",
+            message: "Authentication failed. Please check your API key.",
+            code: 401,
+            request_id: apiError.response.data?.request_id || "unknown"
+          }
+        } as any;
+      } else if (apiError.response?.status === 429) {
+        return {
+          error: {
+            reason: "Rate Limited",
+            message: "API rate limit exceeded. Please try again later.",
+            code: 429,
+            request_id: apiError.response.data?.request_id || "unknown"
+          }
+        } as any;
+      }
+      
+      // Re-throw the original error if it doesn't match any of our specific cases
+      throw apiError;
+    }
+  } catch (error: any) {
     console.error('Error fetching insights:', error);
-    throw error;
+    
+    // If error already has our error format, return it directly
+    if (error.error?.reason && error.error?.message) {
+      return error as any;
+    }
+    
+    // Otherwise create a generic error
+    return {
+      error: {
+        reason: "Error",
+        message: error.message || "An unknown error occurred while fetching insights",
+        code: error.response?.status || 500,
+        request_id: error.response?.data?.request_id || "unknown"
+      }
+    } as any;
   }
 }
 
@@ -1108,7 +1167,14 @@ export async function getEntityDetails(
       
       if (!entity) {
         console.error('Entity not found:', entityId, entityType);
-        throw new Error(`Entity not found in Qloo's database`);
+        return {
+          error: {
+            reason: "Not Found",
+            message: `Entity not found in Qloo's database`,
+            code: 404,
+            request_id: response.data.request_id || "unknown"
+          }
+        } as any;
       }
       
       // If the entity has properties but doesn't have certain expected fields, ensure they're at least initialized
@@ -1128,13 +1194,41 @@ export async function getEntityDetails(
     } catch (apiError: any) {
       // Handle API-specific errors
       if (apiError.response?.status === 404) {
-        throw new Error(`Entity not found in Qloo's database`);
+        return {
+          error: {
+            reason: "Not Found",
+            message: `Entity not found in Qloo's database`,
+            code: 404,
+            request_id: apiError.response.data?.request_id || "unknown"
+          }
+        } as any;
       } else if (apiError.response?.status === 403) {
-        throw new Error(`You don't have permission to access this entity. Please check your API key permissions.`);
+        return {
+          error: {
+            reason: "Forbidden",
+            message: `You don't have permission to access this entity. Please check your API key permissions.`,
+            code: 403,
+            request_id: apiError.response.data?.request_id || "unknown"
+          }
+        } as any;
       } else if (apiError.response?.status === 401) {
-        throw new Error(`Authentication failed. Please check your API key.`);
+        return {
+          error: {
+            reason: "Unauthorized",
+            message: `Authentication failed. Please check your API key.`,
+            code: 401,
+            request_id: apiError.response.data?.request_id || "unknown"
+          }
+        } as any;
       } else if (apiError.response?.status === 429) {
-        throw new Error(`API rate limit exceeded. Please try again later.`);
+        return {
+          error: {
+            reason: "Rate Limited",
+            message: `API rate limit exceeded. Please try again later.`,
+            code: 429,
+            request_id: apiError.response.data?.request_id || "unknown"
+          }
+        } as any;
       }
       
       // Re-throw the original error if it doesn't match any of our specific cases
@@ -1142,7 +1236,21 @@ export async function getEntityDetails(
     }
   } catch (error: any) {
     console.error('Error fetching entity details:', error);
-    throw error;
+    
+    // If error already has our error format, return it directly
+    if (error.error?.reason && error.error?.message) {
+      return error as any;
+    }
+    
+    // Otherwise create a generic error
+    return {
+      error: {
+        reason: "Error",
+        message: error.message || "An unknown error occurred while fetching entity details",
+        code: error.response?.status || 500,
+        request_id: error.response?.data?.request_id || "unknown"
+      }
+    } as any;
   }
 }
 

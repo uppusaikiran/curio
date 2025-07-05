@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { searchEntities, getTrendingEntities, getAnalysis, getRecommendations, getEntityTypes } from '@/lib/qlooService';
 import perplexityService from '@/lib/perplexityService';
@@ -10,6 +10,9 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import * as d3 from 'd3';
+import WordCloudVisualization from './WordCloudVisualization';
+import GeoVisualization from './GeoVisualization';
 
 type AssistantState = {
   loading: boolean;
@@ -34,6 +37,12 @@ type TrendingState = {
   loading: boolean;
   error: string | null;
   entities: QlooTrendingEntity[];
+};
+
+// New type for sentiment analysis
+type SentimentData = {
+  category: string;
+  score: number;
 };
 
 export default function CulturalAssistant() {
@@ -63,6 +72,10 @@ export default function CulturalAssistant() {
   const [entityTypes, setEntityTypes] = useState<QlooEntityType[]>([]);
   const [selectedEntityType, setSelectedEntityType] = useState<string>('urn:entity:movie');
   const [activeTab, setActiveTab] = useState('assistant');
+  const radarChartRef = useRef<SVGSVGElement>(null);
+  const sentimentChartRef = useRef<SVGSVGElement>(null);
+  const connectionGraphRef = useRef<SVGSVGElement>(null);
+  const timelineRef = useRef<SVGSVGElement>(null);
   
   // Load entity types on mount
   useEffect(() => {
@@ -287,6 +300,526 @@ export default function CulturalAssistant() {
       });
   };
   
+  // Generate sentiment data from assistant's answer
+  const generateSentimentData = (): SentimentData[] => {
+    if (!assistantState.answer) return [];
+    
+    // This is a simplified simulation - in a real app, you might use NLP
+    // to extract actual sentiment data from the assistant's response
+    return [
+      { category: "Positivity", score: 0.7 + Math.random() * 0.3 },
+      { category: "Cultural Relevance", score: 0.6 + Math.random() * 0.4 },
+      { category: "Historical Context", score: 0.5 + Math.random() * 0.5 },
+      { category: "Novelty", score: 0.4 + Math.random() * 0.6 },
+      { category: "Depth", score: 0.5 + Math.random() * 0.5 }
+    ];
+  };
+  
+  // Create radar chart when entities are selected
+  useEffect(() => {
+    if (activeTab === 'insights' && selectedEntities.length > 0 && radarChartRef.current) {
+      renderRadarChart();
+    }
+  }, [selectedEntities, activeTab]);
+  
+  // Create sentiment chart when assistant provides an answer
+  useEffect(() => {
+    if (activeTab === 'insights' && assistantState.answer && sentimentChartRef.current) {
+      renderSentimentChart();
+    }
+  }, [assistantState.answer, activeTab]);
+  
+  // Create connections graph when entities are selected
+  useEffect(() => {
+    if (activeTab === 'insights' && selectedEntities.length > 0 && connectionGraphRef.current) {
+      renderConnectionGraph();
+    }
+  }, [selectedEntities, activeTab]);
+  
+  // Create timeline visualization when entities are selected
+  useEffect(() => {
+    if (activeTab === 'insights' && selectedEntities.length > 0 && timelineRef.current) {
+      renderTimeline();
+    }
+  }, [selectedEntities, activeTab]);
+  
+  // Render radar chart to compare selected entities
+  const renderRadarChart = () => {
+    if (!radarChartRef.current || selectedEntities.length === 0) return;
+    
+    // Clear existing chart
+    d3.select(radarChartRef.current).selectAll("*").remove();
+    
+    const svg = d3.select(radarChartRef.current);
+    const width = radarChartRef.current.clientWidth;
+    const height = 300;
+    const margin = { top: 50, right: 50, bottom: 50, left: 50 };
+    const chartWidth = width - margin.left - margin.right;
+    const chartHeight = height - margin.top - margin.bottom;
+    const radius = Math.min(chartWidth, chartHeight) / 2;
+    
+    // Create a group for the visualization
+    const g = svg.append("g")
+      .attr("transform", `translate(${width/2},${height/2})`);
+    
+    // Define the dimensions for the radar chart
+    const dimensions = ["Cultural Impact", "Popularity", "Critical Acclaim", "Innovation", "Longevity"];
+    const angleSlice = (Math.PI * 2) / dimensions.length;
+    
+    // Scale for the radius
+    const rScale = d3.scaleLinear()
+      .domain([0, 1])
+      .range([0, radius]);
+    
+    // Draw the circular grid lines
+    const axisGrid = g.append("g").attr("class", "axis-grid");
+    
+    // Draw the background circles
+    const levels = 5;
+    axisGrid.selectAll(".level")
+      .data(d3.range(1, levels+1).reverse())
+      .enter()
+      .append("circle")
+      .attr("class", "level")
+      .attr("r", d => radius * d / levels)
+      .attr("fill", "none")
+      .attr("stroke", "var(--border)")
+      .attr("stroke-opacity", 0.3);
+    
+    // Create the straight lines radiating outward from the center
+    const axis = axisGrid.selectAll(".axis")
+      .data(dimensions)
+      .enter()
+      .append("g")
+      .attr("class", "axis");
+    
+    // Draw the lines
+    axis.append("line")
+      .attr("x1", 0)
+      .attr("y1", 0)
+      .attr("x2", (d, i) => rScale(1.1) * Math.cos(angleSlice * i - Math.PI/2))
+      .attr("y2", (d, i) => rScale(1.1) * Math.sin(angleSlice * i - Math.PI/2))
+      .attr("stroke", "var(--border)")
+      .attr("stroke-width", "1px");
+    
+    // Draw axis labels
+    axis.append("text")
+      .attr("class", "legend")
+      .attr("text-anchor", "middle")
+      .attr("dy", "0.35em")
+      .attr("x", (d, i) => rScale(1.2) * Math.cos(angleSlice * i - Math.PI/2))
+      .attr("y", (d, i) => rScale(1.2) * Math.sin(angleSlice * i - Math.PI/2))
+      .text(d => d)
+      .attr("fill", "var(--foreground)")
+      .style("font-size", "10px");
+    
+    // Create random data for each entity (in a real app, this would come from API)
+    const data = selectedEntities.map(entity => {
+      return dimensions.map((dim, i) => {
+        // Generate pseudo-random but consistent values based on entity_id
+        const hash = entity.entity_id.split('').reduce((a, b) => {
+          a = ((a << 5) - a) + b.charCodeAt(0);
+          return a & a;
+        }, 0);
+        const baseValue = (Math.abs(hash + i * 100) % 100) / 100;
+        return {
+          axis: dim,
+          value: 0.3 + baseValue * 0.7 // Scale to 0.3-1.0 range
+        };
+      });
+    });
+    
+    // Create color scale for entities
+    const colorScale = d3.scaleOrdinal<string>()
+      .domain(selectedEntities.map(e => e.entity_id))
+      .range(["var(--qloo-teal)", "var(--qloo-yellow)", "#6EE7B7", "#3B82F6", "#8B5CF6"]);
+    
+    // Draw the radar chart paths
+    data.forEach((d, i) => {
+      // Create the radar line function
+      const radarLine = d3.lineRadial<{axis: string, value: number}>()
+        .radius(d => rScale(d.value))
+        .angle((d, i) => i * angleSlice)
+        .curve(d3.curveLinearClosed);
+      
+      // Create the radar areas
+      g.append("path")
+        .datum(d)
+        .attr("class", "radar-area")
+        .attr("d", radarLine as any)
+        .attr("fill", colorScale(selectedEntities[i].entity_id))
+        .attr("fill-opacity", 0.1)
+        .attr("stroke", colorScale(selectedEntities[i].entity_id))
+        .attr("stroke-width", 2)
+        .attr("stroke-opacity", 0.8);
+      
+      // Add dots at each data point
+      g.selectAll(`.radar-circle-${i}`)
+        .data(d)
+        .enter()
+        .append("circle")
+        .attr("class", `radar-circle-${i}`)
+        .attr("r", 4)
+        .attr("cx", (d, j) => rScale(d.value) * Math.cos(angleSlice * j - Math.PI/2))
+        .attr("cy", (d, j) => rScale(d.value) * Math.sin(angleSlice * j - Math.PI/2))
+        .attr("fill", colorScale(selectedEntities[i].entity_id));
+    });
+    
+    // Add legend
+    const legend = svg.append("g")
+      .attr("class", "legend")
+      .attr("transform", `translate(${width - 120}, 20)`);
+    
+    selectedEntities.forEach((entity, i) => {
+      const legendRow = legend.append("g")
+        .attr("transform", `translate(0, ${i * 20})`);
+      
+      legendRow.append("rect")
+        .attr("width", 10)
+        .attr("height", 10)
+        .attr("fill", colorScale(entity.entity_id));
+      
+      legendRow.append("text")
+        .attr("x", 15)
+        .attr("y", 9)
+        .attr("fill", "var(--foreground)")
+        .style("font-size", "10px")
+        .text(entity.name.substring(0, 15) + (entity.name.length > 15 ? "..." : ""));
+    });
+  };
+  
+  // Render sentiment analysis chart
+  const renderSentimentChart = () => {
+    if (!sentimentChartRef.current || !assistantState.answer) return;
+    
+    // Clear existing chart
+    d3.select(sentimentChartRef.current).selectAll("*").remove();
+    
+    const svg = d3.select(sentimentChartRef.current);
+    const width = sentimentChartRef.current.clientWidth;
+    const height = 200;
+    const margin = { top: 20, right: 20, bottom: 30, left: 120 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+    
+    // Generate sentiment data
+    const data = generateSentimentData();
+    
+    // Create scales
+    const xScale = d3.scaleLinear()
+      .domain([0, 1])
+      .range([0, innerWidth]);
+    
+    const yScale = d3.scaleBand()
+      .domain(data.map(d => d.category))
+      .range([0, innerHeight])
+      .padding(0.2);
+    
+    // Create a group for the visualization
+    const g = svg.append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+    
+    // Add y-axis
+    g.append("g")
+      .call(d3.axisLeft(yScale))
+      .selectAll("text")
+      .attr("fill", "var(--foreground)")
+      .style("font-size", "12px");
+    
+    // Add x-axis
+    g.append("g")
+      .attr("transform", `translate(0,${innerHeight})`)
+      .call(d3.axisBottom(xScale).ticks(5).tickFormat(d3.format(".0%")))
+      .selectAll("text")
+      .attr("fill", "var(--foreground)")
+      .style("font-size", "12px");
+    
+    // Add bars
+    g.selectAll(".bar")
+      .data(data)
+      .enter()
+      .append("rect")
+      .attr("class", "bar")
+      .attr("y", d => yScale(d.category) || 0)
+      .attr("height", yScale.bandwidth())
+      .attr("x", 0)
+      .attr("width", 0)
+      .attr("fill", "var(--qloo-teal)")
+      .transition()
+      .duration(1000)
+      .attr("width", d => xScale(d.score));
+    
+    // Add score labels
+    g.selectAll(".score")
+      .data(data)
+      .enter()
+      .append("text")
+      .attr("class", "score")
+      .attr("x", d => xScale(d.score) + 5)
+      .attr("y", d => (yScale(d.category) || 0) + yScale.bandwidth() / 2 + 4)
+      .attr("fill", "var(--foreground)")
+      .style("font-size", "12px")
+      .style("opacity", 0)
+      .text(d => d3.format(".0%")(d.score))
+      .transition()
+      .duration(1000)
+      .style("opacity", 1);
+  };
+  
+  // Render connections graph
+  const renderConnectionGraph = () => {
+    if (!connectionGraphRef.current || selectedEntities.length === 0) return;
+    
+    // Clear existing chart
+    d3.select(connectionGraphRef.current).selectAll("*").remove();
+    
+    const svg = d3.select(connectionGraphRef.current);
+    const width = connectionGraphRef.current.clientWidth;
+    const height = 300;
+    
+    // Create nodes for selected entities
+    const nodes = selectedEntities.map(entity => ({
+      id: entity.entity_id,
+      name: entity.name,
+      type: entity.type,
+      group: entity.type,
+      radius: 30
+    }));
+    
+    // Create additional nodes for related concepts (simulated)
+    const relatedConcepts = [
+      { id: "concept1", name: "Cultural Movement", type: "concept", group: "concept", radius: 20 },
+      { id: "concept2", name: "Time Period", type: "concept", group: "concept", radius: 20 },
+      { id: "concept3", name: "Genre", type: "concept", group: "concept", radius: 20 },
+      { id: "concept4", name: "Creator", type: "concept", group: "concept", radius: 20 },
+      { id: "concept5", name: "Theme", type: "concept", group: "concept", radius: 20 }
+    ];
+    
+    const allNodes = [...nodes, ...relatedConcepts];
+    
+    // Create links between entities and concepts
+    const links: {source: string, target: string, value: number}[] = [];
+    
+    // Connect each entity to some concepts
+    nodes.forEach(node => {
+      // Connect to 2-3 random concepts
+      const numConnections = 2 + Math.floor(Math.random() * 2);
+      const shuffled = [...relatedConcepts].sort(() => 0.5 - Math.random());
+      
+      for (let i = 0; i < numConnections; i++) {
+        links.push({
+          source: node.id,
+          target: shuffled[i].id,
+          value: 1 + Math.random() * 5
+        });
+      }
+    });
+    
+    // Add some connections between entities if there are multiple
+    if (nodes.length > 1) {
+      for (let i = 0; i < nodes.length - 1; i++) {
+        links.push({
+          source: nodes[i].id,
+          target: nodes[i + 1].id,
+          value: 2 + Math.random() * 3
+        });
+      }
+    }
+    
+    // Create force simulation
+    const simulation = d3.forceSimulation(allNodes as any)
+      .force("link", d3.forceLink(links).id((d: any) => d.id).distance(d => 100))
+      .force("charge", d3.forceManyBody().strength(-300))
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force("collision", d3.forceCollide().radius((d: any) => d.radius + 5));
+    
+    // Create a group for the visualization
+    const g = svg.append("g");
+    
+    // Add links
+    const link = g.append("g")
+      .selectAll("line")
+      .data(links)
+      .enter()
+      .append("line")
+      .attr("stroke", "var(--border)")
+      .attr("stroke-opacity", 0.6)
+      .attr("stroke-width", d => Math.sqrt(d.value));
+    
+    // Create color scale for nodes
+    const colorScale = d3.scaleOrdinal<string>()
+      .domain(["urn:entity:movie", "urn:entity:music", "urn:entity:book", "urn:entity:restaurant", "concept"])
+      .range(["var(--qloo-teal)", "var(--qloo-yellow)", "#6EE7B7", "#3B82F6", "#8B5CF6"]);
+    
+    // Add node groups
+    const node = g.append("g")
+      .selectAll(".node")
+      .data(allNodes)
+      .enter()
+      .append("g")
+      .attr("class", "node")
+      .call(d3.drag<any, any>()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended) as any);
+    
+    // Add circles for nodes
+    node.append("circle")
+      .attr("r", (d: any) => d.radius)
+      .attr("fill", (d: any) => colorScale(d.group))
+      .attr("stroke", "var(--background)")
+      .attr("stroke-width", 2)
+      .attr("opacity", 0)
+      .transition()
+      .duration(1000)
+      .attr("opacity", 0.7);
+    
+    // Add text labels
+    node.append("text")
+      .attr("text-anchor", "middle")
+      .attr("dy", ".3em")
+      .attr("fill", "var(--background)")
+      .style("font-size", "10px")
+      .style("pointer-events", "none")
+      .style("opacity", 0)
+      .text((d: any) => d.name.substring(0, 10) + (d.name.length > 10 ? "..." : ""))
+      .transition()
+      .duration(1000)
+      .style("opacity", 1);
+    
+    // Update positions on tick
+    simulation.on("tick", () => {
+      link
+        .attr("x1", (d: any) => d.source.x)
+        .attr("y1", (d: any) => d.source.y)
+        .attr("x2", (d: any) => d.target.x)
+        .attr("y2", (d: any) => d.target.y);
+      
+      node
+        .attr("transform", (d: any) => `translate(${d.x},${d.y})`);
+    });
+    
+    // Drag functions
+    function dragstarted(event: any, d: any) {
+      if (!event.active) simulation.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+    
+    function dragged(event: any, d: any) {
+      d.fx = event.x;
+      d.fy = event.y;
+    }
+    
+    function dragended(event: any, d: any) {
+      if (!event.active) simulation.alphaTarget(0);
+      d.fx = null;
+      d.fy = null;
+    }
+  };
+  
+  // Render timeline visualization
+  const renderTimeline = () => {
+    if (!timelineRef.current || selectedEntities.length === 0) return;
+    
+    // Clear existing chart
+    d3.select(timelineRef.current).selectAll("*").remove();
+    
+    const svg = d3.select(timelineRef.current);
+    const width = timelineRef.current.clientWidth;
+    const height = 150;
+    const margin = { top: 20, right: 50, bottom: 30, left: 50 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+    
+    // Create a group for the visualization
+    const g = svg.append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+    
+    // Generate timeline data based on selected entities
+    const timelineData = selectedEntities.map(entity => {
+      // Use release_year from properties if available, or generate a random year
+      const year = entity.properties?.release_year || 
+                  (2000 + Math.floor(Math.random() * 23)); // Random year between 2000-2023
+      
+      return {
+        id: entity.entity_id,
+        name: entity.name,
+        year: year,
+        type: entity.type
+      };
+    });
+    
+    // Sort by year
+    timelineData.sort((a, b) => a.year - b.year);
+    
+    // Create time scale
+    const minYear = Math.min(...timelineData.map(d => d.year)) - 1;
+    const maxYear = Math.max(...timelineData.map(d => d.year)) + 1;
+    
+    const xScale = d3.scaleLinear()
+      .domain([minYear, maxYear])
+      .range([0, innerWidth]);
+    
+    // Draw the axis
+    g.append("line")
+      .attr("x1", 0)
+      .attr("y1", innerHeight / 2)
+      .attr("x2", innerWidth)
+      .attr("y2", innerHeight / 2)
+      .attr("stroke", "var(--border)")
+      .attr("stroke-width", 2);
+    
+    // Add year labels
+    g.selectAll(".year-label")
+      .data(d3.range(minYear, maxYear + 1))
+      .enter()
+      .append("text")
+      .attr("class", "year-label")
+      .attr("x", d => xScale(d))
+      .attr("y", innerHeight / 2 + 20)
+      .attr("text-anchor", "middle")
+      .attr("fill", "var(--foreground)")
+      .style("font-size", "10px")
+      .text(d => d);
+    
+    // Create color scale for entities
+    const colorScale = d3.scaleOrdinal<string>()
+      .domain(["urn:entity:movie", "urn:entity:music", "urn:entity:book", "urn:entity:restaurant"])
+      .range(["var(--qloo-teal)", "var(--qloo-yellow)", "#6EE7B7", "#3B82F6"]);
+    
+    // Add event markers
+    const events = g.selectAll(".event")
+      .data(timelineData)
+      .enter()
+      .append("g")
+      .attr("class", "event")
+      .attr("transform", d => `translate(${xScale(d.year)},${innerHeight / 2})`);
+    
+    // Add circles for events
+    events.append("circle")
+      .attr("r", 8)
+      .attr("fill", d => colorScale(d.type))
+      .attr("stroke", "var(--background)")
+      .attr("stroke-width", 2);
+    
+    // Add alternating labels above and below the timeline
+    events.append("text")
+      .attr("y", (d, i) => i % 2 === 0 ? -15 : 25)
+      .attr("text-anchor", "middle")
+      .attr("fill", "var(--foreground)")
+      .style("font-size", "10px")
+      .text(d => d.name.substring(0, 15) + (d.name.length > 15 ? "..." : ""));
+    
+    // Add year labels for each event
+    events.append("text")
+      .attr("y", (d, i) => i % 2 === 0 ? -30 : 40)
+      .attr("text-anchor", "middle")
+      .attr("fill", "var(--muted-foreground)")
+      .style("font-size", "9px")
+      .text(d => d.year);
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
       {/* Left column: Entity selection */}
@@ -381,10 +914,11 @@ export default function CulturalAssistant() {
       {/* Right column: Question and answer */}
       <div className="md:col-span-2">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-3 mb-4">
+          <TabsList className="grid grid-cols-4 mb-4">
             <TabsTrigger value="assistant">Assistant</TabsTrigger>
             <TabsTrigger value="analysis">Entity Analysis</TabsTrigger>
             <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
+            <TabsTrigger value="insights">Insights</TabsTrigger>
           </TabsList>
           
           <TabsContent value="assistant">
@@ -645,6 +1179,96 @@ export default function CulturalAssistant() {
                     </div>
                   )}
                 </>
+              )}
+            </motion.div>
+          </TabsContent>
+          
+          <TabsContent value="insights">
+            <motion.div 
+              className="bg-muted/30 p-6 rounded-lg border border-qloo-teal/20"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <h2 className="text-xl font-semibold mb-4">Cultural Insights Visualizations</h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                Explore visual representations of cultural connections, patterns, and insights based on your selected entities.
+              </p>
+              
+              {selectedEntities.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Select entities to see visualizations</p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {/* Word Cloud */}
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Cultural Word Cloud</h3>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Key terms and concepts related to your selected entities
+                    </p>
+                    <div className="h-[300px] border border-border/30 rounded-lg p-2">
+                      <WordCloudVisualization entities={selectedEntities} />
+                    </div>
+                  </div>
+                  
+                  {/* Geographic Visualization */}
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Global Cultural Influence</h3>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Geographic regions influenced by the selected entities
+                    </p>
+                    <div className="h-[300px] border border-border/30 rounded-lg p-2">
+                      <GeoVisualization entities={selectedEntities} />
+                    </div>
+                  </div>
+                  
+                  {/* Radar Chart */}
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Cultural Dimension Comparison</h3>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Compare selected entities across different cultural dimensions
+                    </p>
+                    <div className="h-[300px] border border-border/30 rounded-lg p-2">
+                      <svg ref={radarChartRef} width="100%" height="100%"></svg>
+                    </div>
+                  </div>
+                  
+                  {/* Connection Graph */}
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Cultural Connections Map</h3>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Interactive graph showing connections between entities and cultural concepts
+                    </p>
+                    <div className="h-[300px] border border-border/30 rounded-lg p-2">
+                      <svg ref={connectionGraphRef} width="100%" height="100%"></svg>
+                    </div>
+                  </div>
+                  
+                  {/* Timeline */}
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Cultural Timeline</h3>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Chronological view of selected entities
+                    </p>
+                    <div className="h-[150px] border border-border/30 rounded-lg p-2">
+                      <svg ref={timelineRef} width="100%" height="100%"></svg>
+                    </div>
+                  </div>
+                  
+                  {/* Sentiment Analysis (only shown if there's an assistant answer) */}
+                  {assistantState.answer && (
+                    <div>
+                      <h3 className="text-lg font-medium mb-2">Response Analysis</h3>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Analysis of the cultural assistant's response
+                      </p>
+                      <div className="h-[200px] border border-border/30 rounded-lg p-2">
+                        <svg ref={sentimentChartRef} width="100%" height="100%"></svg>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </motion.div>
           </TabsContent>

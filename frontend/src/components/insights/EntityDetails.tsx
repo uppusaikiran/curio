@@ -8,11 +8,50 @@ interface EntityDetailsProps {
   entity: QlooEntity | null;
 }
 
+// Interface for API error responses
+interface ApiErrorResponse {
+  error: {
+    reason: string;
+    message: string;
+    code: number;
+    request_id: string;
+  };
+}
+
 export default function EntityDetails({ entity }: EntityDetailsProps) {
   const [activeTab, setActiveTab] = useState('info');
   
   if (!entity) {
     return null;
+  }
+
+  // Check if the entity is actually an error response
+  if ((entity as any)?.error) {
+    const errorData = (entity as unknown as ApiErrorResponse).error;
+    return (
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="p-6">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-4">
+            <h3 className="text-lg font-medium">{errorData.reason}</h3>
+            <p className="mt-2">{errorData.message}</p>
+            {errorData.request_id && (
+              <p className="text-xs mt-2">Request ID: {errorData.request_id}</p>
+            )}
+          </div>
+          <div className="mt-4">
+            <p className="text-gray-600">
+              Unable to retrieve complete entity details. This could be due to:
+            </p>
+            <ul className="list-disc list-inside mt-2 text-gray-600">
+              <li>API permission restrictions</li>
+              <li>Rate limiting on the API</li>
+              <li>The entity may have been removed or is unavailable</li>
+              <li>Your API key may not have access to this specific entity</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const imageUrl = entity.properties?.image?.url || 
@@ -258,80 +297,81 @@ export default function EntityDetails({ entity }: EntityDetailsProps) {
           
           {activeTab === 'external' && (
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">External Services</h3>
+              <h3 className="text-lg font-medium text-gray-900">External Data</h3>
               
               {!entity.external || Object.keys(entity.external).length === 0 ? (
-                <p className="text-gray-500">No external service data available</p>
+                <p className="text-gray-500">No external data available for this entity</p>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {entity.external.imdb && (
-                    <div className="border rounded-md p-3">
-                      <h4 className="font-medium">IMDb</h4>
-                      <p>ID: {entity.external.imdb[0].id}</p>
-                      {entity.external.imdb[0].user_rating && (
-                        <p>Rating: {entity.external.imdb[0].user_rating}/10 
-                          <span className="text-xs text-gray-400"> ({entity.external.imdb[0].user_rating_count?.toLocaleString()} votes)</span>
+                <div className="space-y-4">
+                  {entity.external.imdb && entity.external.imdb.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">IMDb</h4>
+                      <div className="mt-1 text-gray-600">
+                        <p>ID: {entity.external.imdb[0].id}</p>
+                        {entity.external.imdb[0].user_rating && (
+                          <p>Rating: {entity.external.imdb[0].user_rating} / 10 
+                            {entity.external.imdb[0].user_rating_count && 
+                              ` (${entity.external.imdb[0].user_rating_count.toLocaleString()} votes)`}
+                          </p>
+                        )}
+                        <p className="mt-1">
+                          <a 
+                            href={`https://www.imdb.com/title/${entity.external.imdb[0].id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline"
+                          >
+                            View on IMDb
+                          </a>
                         </p>
-                      )}
-                    </div>
-                  )}
-                  
-                  {entity.external.rottentomatoes && (
-                    <div className="border rounded-md p-3">
-                      <h4 className="font-medium">Rotten Tomatoes</h4>
-                      <p>ID: {entity.external.rottentomatoes[0].id}</p>
-                      {entity.external.rottentomatoes[0].critic_rating && (
-                        <p>Critic: {entity.external.rottentomatoes[0].critic_rating}%
-                          {entity.external.rottentomatoes[0].critic_rating_count && (
-                            <span className="text-xs text-gray-400"> ({entity.external.rottentomatoes[0].critic_rating_count} reviews)</span>
-                          )}
-                        </p>
-                      )}
-                      {entity.external.rottentomatoes[0].user_rating && (
-                        <p>User: {entity.external.rottentomatoes[0].user_rating}%
-                          {entity.external.rottentomatoes[0].user_rating_count && (
-                            <span className="text-xs text-gray-400"> ({entity.external.rottentomatoes[0].user_rating_count} ratings)</span>
-                          )}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  
-                  {entity.external.metacritic && (
-                    <div className="border rounded-md p-3">
-                      <h4 className="font-medium">Metacritic</h4>
-                      <p>ID: {entity.external.metacritic[0].id}</p>
-                      {entity.external.metacritic[0].critic_rating && (
-                        <p>Critic score: {entity.external.metacritic[0].critic_rating}/100</p>
-                      )}
-                      {entity.external.metacritic[0].user_rating && (
-                        <p>User score: {entity.external.metacritic[0].user_rating}/10</p>
-                      )}
-                    </div>
-                  )}
-                  
-                  {/* Add other external services as needed */}
-                  {Object.entries(entity.external)
-                    .filter(([key]) => !['imdb', 'rottentomatoes', 'metacritic'].includes(key))
-                    .map(([serviceName, serviceData]) => (
-                      <div key={serviceName} className="border rounded-md p-3">
-                        <h4 className="font-medium capitalize">{serviceName}</h4>
-                        {Array.isArray(serviceData) && serviceData.map((item, index) => (
-                          <div key={index}>
-                            <p>ID: {item.id}</p>
-                            {/* Display other properties if they exist */}
-                            {Object.entries(item)
-                              .filter(([key]) => key !== 'id')
-                              .map(([key, value]) => (
-                                <p key={key}>
-                                  {key.replace(/_/g, ' ')}: {String(value)}
-                                </p>
-                              ))}
-                          </div>
-                        ))}
                       </div>
-                    ))
-                  }
+                    </div>
+                  )}
+                  
+                  {entity.external.rottentomatoes && entity.external.rottentomatoes.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">Rotten Tomatoes</h4>
+                      <div className="mt-1 text-gray-600">
+                        <p>ID: {entity.external.rottentomatoes[0].id}</p>
+                        {entity.external.rottentomatoes[0].critic_rating && (
+                          <p>Critic Score: {entity.external.rottentomatoes[0].critic_rating}
+                            {entity.external.rottentomatoes[0].critic_rating_count && 
+                              ` (${entity.external.rottentomatoes[0].critic_rating_count} reviews)`}
+                          </p>
+                        )}
+                        {entity.external.rottentomatoes[0].user_rating && (
+                          <p>Audience Score: {entity.external.rottentomatoes[0].user_rating}
+                            {entity.external.rottentomatoes[0].user_rating_count && 
+                              ` (${entity.external.rottentomatoes[0].user_rating_count} ratings)`}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {entity.external.metacritic && entity.external.metacritic.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">Metacritic</h4>
+                      <div className="mt-1 text-gray-600">
+                        <p>ID: {entity.external.metacritic[0].id}</p>
+                        {entity.external.metacritic[0].critic_rating !== undefined && (
+                          <p>Critic Score: {entity.external.metacritic[0].critic_rating} / 100</p>
+                        )}
+                        {entity.external.metacritic[0].user_rating !== undefined && (
+                          <p>User Score: {entity.external.metacritic[0].user_rating} / 10</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {entity.external.netflix && entity.external.netflix.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">Netflix</h4>
+                      <p className="mt-1 text-gray-600">ID: {entity.external.netflix[0].id}</p>
+                    </div>
+                  )}
+                  
+                  {/* Add other external data sources as needed */}
                 </div>
               )}
             </div>

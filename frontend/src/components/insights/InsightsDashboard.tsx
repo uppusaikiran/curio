@@ -1,13 +1,22 @@
 'use client';
 
 import { useState } from 'react';
-import TrendingEntities from '@/components/discovery/TrendingEntities';
 import EntitySearch from '@/components/discovery/EntitySearch';
 import InsightsQueryBuilder from './InsightsQueryBuilder';
 import InsightsResults from './InsightsResults';
 import { QlooEntity, QlooInsight } from '@/types/qloo';
 import { getInsights } from '@/lib/qlooService';
 import { Button } from '@/components/ui/button';
+
+// Interface for API error responses
+interface ApiErrorResponse {
+  error: {
+    reason: string;
+    message: string;
+    code: number;
+    request_id: string;
+  };
+}
 
 export default function InsightsDashboard() {
   const [selectedEntity, setSelectedEntity] = useState<QlooEntity | null>(null);
@@ -33,10 +42,36 @@ export default function InsightsDashboard() {
         'include.popularity': true,
         'include.metrics': 'audience_growth',
       });
+      
+      // Check if the response is an error object
+      if ((results as any)?.error) {
+        const errorResponse = results as unknown as ApiErrorResponse;
+        throw new Error(`${errorResponse.error.reason}: ${errorResponse.error.message} (Code: ${errorResponse.error.code})`);
+      }
+      
       setInsights(results);
-    } catch (error) {
-      setErrorInsights('Failed to fetch insights. Please try again.');
-      console.error(error);
+    } catch (error: any) {
+      console.error('Error fetching insights:', error);
+      
+      // Handle API error responses
+      if (error.response?.data?.error) {
+        const apiError = error.response.data.error;
+        setErrorInsights(`${apiError.reason}: ${apiError.message}`);
+      } 
+      // Handle formatted error responses
+      else if (error.error) {
+        setErrorInsights(`${error.error.reason}: ${error.error.message}`);
+      }
+      // Handle standard error objects
+      else if (error.message) {
+        setErrorInsights(error.message);
+      } 
+      // Fallback error message
+      else {
+        setErrorInsights('Failed to fetch insights. Please try again later.');
+      }
+      
+      setInsights([]);
     } finally {
       setIsLoadingInsights(false);
     }
@@ -69,7 +104,6 @@ export default function InsightsDashboard() {
         <div className="lg:col-span-2">
           <div className="space-y-8">
             <InsightsResults insights={insights} isLoading={isLoadingInsights} error={errorInsights} />
-            <TrendingEntities />
           </div>
         </div>
       </div>
