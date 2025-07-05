@@ -10,7 +10,8 @@ import { QlooEntity } from '@/types/qloo';
 import { Container } from '@/components/ui/container';
 import Header from '@/components/Header';
 import { isApiConfigured } from '@/lib/qlooService';
-import Link from 'next/link';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import InsightsDashboard from '@/components/insights/InsightsDashboard';
 
 export default function DiscoveryDashboard() {
   const [selectedEntity, setSelectedEntity] = useState<QlooEntity | null>(null);
@@ -74,93 +75,110 @@ export default function DiscoveryDashboard() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="text-center mb-12"
+              className="text-center mb-8"
             >
               <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl mb-6">
                 <span className="gradient-text">Explore Your</span> Cultural Universe
               </h1>
-              <p className="text-lg text-muted-foreground mb-8">
+              <p className="text-lg text-muted-foreground mb-4">
                 Discover connections between your interests and explore new recommendations powered by Qloo's Taste AI™.
               </p>
             </motion.div>
             
-            {/* Search Section */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="mb-8"
-            >
-              <EntitySearch onEntitySelect={handleEntitySelect} />
-            </motion.div>
-            
-            {/* Trending Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="mb-8"
-            >
-              <TrendingEntities onEntitySelect={handleEntitySelect} />
-            </motion.div>
-            
-            {/* Analysis Section */}
-            {selectedEntity && (
-              <motion.div
-                id="entity-analysis"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8"
-              >
-                <EntityAnalysis entity={selectedEntity} />
-                <RelatedEntities entity={selectedEntity} onEntitySelect={handleEntitySelect} />
-              </motion.div>
-            )}
-            
-            {/* Features Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="mt-12"
-            >
-              <h2 className="text-2xl font-semibold mb-6 text-center">
-                Discover More with Qloo API
-              </h2>
+            {/* Tabs for Discovery and Insights */}
+            <Tabs defaultValue="discover" className="w-full mb-8">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="discover">Discovery</TabsTrigger>
+                <TabsTrigger value="insights">Insights Dashboard</TabsTrigger>
+              </TabsList>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-muted/30 p-6 rounded-lg border border-qloo-yellow/20">
-                  <h3 className="text-xl font-medium mb-3 flex items-center">
-                    <span className="w-8 h-8 rounded-full bg-qloo-yellow flex items-center justify-center text-qloo-black mr-2">1</span>
-                    Location Insights
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Discover cultural preferences across different geographic regions and explore tastes that are popular in specific locations.
-                  </p>
-                </div>
+              {/* Discovery Tab Content */}
+              <TabsContent value="discover">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className="mb-8"
+                >
+                  <EntitySearch onEntitySelect={handleEntitySelect} />
+                </motion.div>
                 
-                <div className="bg-muted/30 p-6 rounded-lg border border-qloo-teal/20">
-                  <h3 className="text-xl font-medium mb-3 flex items-center">
-                    <span className="w-8 h-8 rounded-full bg-qloo-teal flex items-center justify-center text-qloo-black mr-2">2</span>
-                    Audience Analysis
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Understand the demographic makeup of audiences interested in specific content, helping creators tailor their work to target markets.
-                  </p>
-                </div>
+                {/* Trending Section */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="mb-8"
+                >
+                  <TrendingEntities onEntitySelect={handleEntitySelect} />
+                </motion.div>
                 
-                <div className="bg-muted/30 p-6 rounded-lg border border-qloo-teal/20">
-                  <h3 className="text-xl font-medium mb-3 flex items-center">
-                    <span className="w-8 h-8 rounded-full bg-qloo-teal flex items-center justify-center text-qloo-black mr-2">3</span>
-                    Taste Analysis
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Dive deep into tag metadata and understand the nuanced connections between cultural preferences and individual taste profiles.
-                  </p>
+                {/* Analysis Section */}
+                {selectedEntity && (
+                  <motion.div
+                    id="entity-analysis"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8"
+                  >
+                    <EntityAnalysis entity={selectedEntity} />
+                    <RelatedEntities entity={selectedEntity} onEntitySelect={handleEntitySelect} />
+                  </motion.div>
+                )}
+                
+                {/* Features Section */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                  className="mt-12"
+                >
+                  <h2 className="text-2xl font-semibold mb-6 text-center">
+                    Discover More with Qloo API
+                  </h2>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-muted/30 p-6 rounded-lg border border-qloo-yellow/20">
+                      <h3 className="text-xl font-medium mb-3 flex items-center">
+                        <span className="w-8 h-8 rounded-full bg-qloo-yellow flex items-center justify-center text-qloo-black mr-2">1</span>
+                        Location Insights
+                      </h3>
+                      <p className="text-muted-foreground">
+                        Discover cultural preferences across different geographic regions and explore tastes that are popular in specific locations.
+                      </p>
+                    </div>
+                    
+                    <div className="bg-muted/30 p-6 rounded-lg border border-qloo-teal/20">
+                      <h3 className="text-xl font-medium mb-3 flex items-center">
+                        <span className="w-8 h-8 rounded-full bg-qloo-teal flex items-center justify-center text-qloo-black mr-2">2</span>
+                        Audience Analysis
+                      </h3>
+                      <p className="text-muted-foreground">
+                        Understand the demographic makeup of audiences interested in specific content, helping creators tailor their work to target markets.
+                      </p>
+                    </div>
+                    
+                    <div className="bg-muted/30 p-6 rounded-lg border border-qloo-teal/20">
+                      <h3 className="text-xl font-medium mb-3 flex items-center">
+                        <span className="w-8 h-8 rounded-full bg-qloo-teal flex items-center justify-center text-qloo-black mr-2">3</span>
+                        Taste Analysis
+                      </h3>
+                      <p className="text-muted-foreground">
+                        Dive deep into tag metadata and understand the nuanced connections between cultural preferences and individual taste profiles.
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              </TabsContent>
+              
+              {/* Insights Tab Content */}
+              <TabsContent value="insights">
+                <div className="mt-4">
+                  <InsightsDashboard />
                 </div>
-              </div>
-            </motion.div>
+              </TabsContent>
+            </Tabs>
           </div>
         </Container>
       </main>

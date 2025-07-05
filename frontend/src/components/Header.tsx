@@ -34,19 +34,17 @@ export default function Header() {
   const navItems = [
     { name: 'Home', path: '/' },
     { name: 'Discover', path: '/discover' },
-    { name: 'Insights Dashboard', path: '/insights-dashboard' },
     { 
       name: 'Cultural Assistant', 
       path: '/cultural-assistant',
       icon: <Sparkles className="h-4 w-4 text-qloo-yellow" />
     },
     { 
-      name: 'Cultural Tools', 
+      name: 'Taste Explorer', 
       path: '/cultural-tools',
       icon: <Globe className="h-4 w-4 text-qloo-teal" />,
       isNew: true
     },
-    { name: 'About', path: '/about' },
   ];
 
   const adminNavItems = [
