@@ -8,6 +8,7 @@ This is the frontend application for Curio, a discovery platform that leverages 
 
 - Node.js 18+ and npm
 - Qloo API key (for discovery features)
+- Tavus API key (for video AI assistant)
 
 ### Installation
 
@@ -27,9 +28,12 @@ Create a `.env.local` file in the `frontend` directory with the following conten
 # Qloo API Configuration
 NEXT_PUBLIC_QLOO_API_URL=https://hackathon.api.qloo.com
 NEXT_PUBLIC_QLOO_API_KEY=your_qloo_api_key_here
+
+# Tavus API Configuration
+NEXT_PUBLIC_TAVUS_API_KEY=your_tavus_api_key_here
 ```
 
-Replace `your_qloo_api_key_here` with your actual Qloo API key.
+Replace `your_qloo_api_key_here` with your actual Qloo API key and `your_tavus_api_key_here` with your Tavus API key.
 
 4. Start the development server:
 
@@ -45,6 +49,38 @@ The application will be available at [http://localhost:3000](http://localhost:30
 - Trending content discovery
 - Detailed entity analysis with tags, audiences, and cultural context
 - Related entity recommendations
+- Tavus Video AI assistant for interactive conversations
+
+## Tavus Video AI Component
+
+The Tavus Video AI component provides an interactive video assistant that appears on the left side of the application. It uses the Tavus API to create and manage video conversations.
+
+### Features
+
+- Interactive video assistant widget
+- Conversation management (create, delete)
+- Automatically cleans up old conversations to avoid reaching limits
+- Visual feedback for loading and error states
+
+### Configuration
+
+To configure the Tavus Video AI component:
+
+1. Set your Tavus API key in `.env.local`:
+   ```
+   NEXT_PUBLIC_TAVUS_API_KEY=your_tavus_api_key_here
+   ```
+
+2. To customize the replica or persona used by the assistant, update the component properties in `app/layout.tsx`:
+   ```tsx
+   <TavusVideoAI 
+     replicaId="your_replica_id"
+     personaId="your_persona_id"
+     apiKey={process.env.NEXT_PUBLIC_TAVUS_API_KEY || ''}
+   />
+   ```
+
+For more details about setting up the Tavus Video AI component, see [TAVUS_SETUP.md](./TAVUS_SETUP.md).
 
 ## Entity Search Component
 

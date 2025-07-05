@@ -5,6 +5,7 @@ import { AuthProvider } from '@/providers/AuthProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import { Footer } from '@/components/ui/footer';
 import ElevenLabsWidget from '@/components/ElevenLabsWidget';
+import TavusVideoAI from '@/components/TavusVideoAI';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +35,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Always include TavusVideoAI
+  const tavusApiKey = process.env.NEXT_PUBLIC_TAVUS_API_KEY || '';
+  
+  console.log('Layout rendering, Tavus API key available:', !!tavusApiKey);
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -48,6 +54,12 @@ export default function RootLayout({
               <Footer />
             </div>
             <ElevenLabsWidget />
+            {/* Always render TavusVideoAI even if API key is empty */}
+            <TavusVideoAI 
+              replicaId="rb17cf590e15"
+              personaId="p2f43cff6aac"
+              apiKey={tavusApiKey}
+            />
           </AuthProvider>
         </ThemeProvider>
       </body>
