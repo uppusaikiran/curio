@@ -1,10 +1,10 @@
 [build]
   base = "frontend"
   command = "npm run build"
-  publish = "frontend/.next"
+  publish = ".next"
 
 [build.environment]
-  NODE_VERSION = "18.17.0"
+  NODE_VERSION = "20.0.0"
   NPM_FLAGS = "--legacy-peer-deps"
   NEXT_TELEMETRY_DISABLED = "1"
 
