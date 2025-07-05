@@ -51,6 +51,33 @@ The application will be available at [http://localhost:3000](http://localhost:30
 - Related entity recommendations
 - Tavus Video AI assistant for interactive conversations
 
+## Screenshots
+
+### Homepage
+<div align="center">
+  <img src="./public/homepage.png" alt="Curio Homepage" width="800">
+</div>
+
+### Cultural Assistant
+<div align="center">
+  <img src="./public/Culture Assistant.png" alt="Cultural Assistant" width="800">
+</div>
+
+### Cultural Taste Profile
+<div align="center">
+  <img src="./public/Culture Taste Profile.png" alt="Cultural Taste Profile" width="800">
+</div>
+
+### Taste Explorer
+<div align="center">
+  <img src="./public/Taste explorer.png" alt="Taste Explorer" width="800">
+</div>
+
+### Video Chat
+<div align="center">
+  <img src="./public/Curio Video Chat.png" alt="Curio Video Chat" width="800">
+</div>
+
 ## Tavus Video AI Component
 
 The Tavus Video AI component provides an interactive video assistant that appears on the left side of the application. It uses the Tavus API to create and manage video conversations.
